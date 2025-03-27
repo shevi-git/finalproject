@@ -1,6 +1,6 @@
 const mongoose=require("mongoose")
 
-const SchemaBuilding=mongoose.Schema({
+const SchemaBuilding=new mongoose.Schema({
     nameFamily:{type:String,require:true},
     floor:{type:Number,require:true},
     electricity:{type:Number,require:true},
