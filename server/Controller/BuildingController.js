@@ -1,14 +1,16 @@
-const Building=require("../Moduls/Building");
+const Building=require("../Moduls/BuildingSchema");
 
 
 
 async function createBuilding(req, res) {
-
-
-    const newBuilding = req.body//  מה שקיבלנו בפוסטמן 
-    let Building1 = await new Building(newBuilding)// יוצר בדטהבייס אוביקט מסוג חיה 
-    await Building1.save()// שומר אותו בדטהבייס
-    res.send(Building1)
-
+    try {
+        const newBuilding = req.body;
+        let building1 = new Building(newBuilding);
+        await building1.save();
+        res.status(201).json(building1);
+    } catch (error) {
+        res.status(500).json({ message: "Error creating building", error });
+    }
 }
+
 module.exports={createBuilding};

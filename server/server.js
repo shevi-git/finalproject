@@ -4,7 +4,9 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const BuildingRouter = require("./Router/BuildingRouter");
-// const RecipeRouter = require("./Routers/RecipeRouter");
+const AnnouncementRouter = require("./Router/AnnouncementRouter");
+const ChatMessageRouter=require("./Router/ChatMessageRouter");
+const registerRouter=require('./Router/UserRouter');
 
 dotenv.config();
 
@@ -21,7 +23,9 @@ mongoose.connect(connectd)
     });
 
 app.use("/Build", BuildingRouter);
-// app.use("/recipe", RecipeRouter);
+app.use("/Announcement", AnnouncementRouter);
+app.use("/ChatMessage",ChatMessageRouter);
+app.use("/register",registerRouter);
 
 const PORT = process.env.APP_PORT || 8080;
 app.listen(PORT, () => {
