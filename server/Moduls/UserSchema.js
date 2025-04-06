@@ -5,8 +5,8 @@ const UserSchema=new mongoose.Schema({
     nameFamily:{type:String,require:true},
     email:{type:String,require:true},
     password:{type:String,require:true},
-    appartment:Number,
-    role:{type:String,enum:['דייר',"ועד בית"],default:'דייר'},
+    appartment:{type:Number},
+    role:{type:String,enum:['tenant',"committee",],default:'tenant'},
     createdAt:{type:Date,default:Date.now}
 })
 module.exports=mongoose.model("UserSchema",UserSchema);

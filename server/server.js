@@ -7,7 +7,7 @@ const BuildingRouter = require("./Router/BuildingRouter");
 const AnnouncementRouter = require("./Router/AnnouncementRouter");
 const ChatMessageRouter=require("./Router/ChatMessageRouter");
 const registerRouter=require('./Router/UserRouter');
-
+const verifyJwt=require('./middleware/verifyJWT');
 dotenv.config();
 
 app.use(bodyParser.json());
@@ -26,6 +26,8 @@ app.use("/Build", BuildingRouter);
 app.use("/Announcement", AnnouncementRouter);
 app.use("/ChatMessage",ChatMessageRouter);
 app.use("/register",registerRouter);
+app.use("/login",loginRouter);
+app.use("/update",verifyJwt,updateUserRouter);
 
 const PORT = process.env.APP_PORT || 8080;
 app.listen(PORT, () => {
