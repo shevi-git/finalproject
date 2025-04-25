@@ -7,8 +7,8 @@ async function register(req, res) {
     try {
         console.log("Request body:", req.body);
 
-        const { nameFamily, email, password, role } = req.body;
-        if (!nameFamily || !email || !password || !role) {
+        const { nameFamily, email, password } = req.body;
+        if (!nameFamily || !email || !password) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
@@ -22,7 +22,7 @@ async function register(req, res) {
         }
 
         const hashedPwd = await bcrypt.hash(password, 10);
-        const userObject = { nameFamily, email, password: hashedPwd, role };
+        const userObject = { nameFamily, email, password: hashedPwd };
 
         const user = await Users.create(userObject);
         if (user) {
@@ -58,7 +58,7 @@ const login = async (req, res) => {
 
         // יצירת טוקן JWT שמכיל את תפקיד המשתמש
         const accessToken = jwt.sign(
-            { nameFamily: foundUser.nameFamily, email: foundUser.email, role: foundUser.role },
+            { nameFamily: foundUser.nameFamily, email: foundUser.email },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: '1h' }
         );
@@ -74,7 +74,7 @@ const updateUser =async(req,res)=>{
     try{
         console.log("Request body:", req.body);
         const {nameFamily,email,password,appartment,role,createdAt}=req.body;
-        if (!email || !password||!nameFamily||appartment||!role||!createdAt) {
+        if (!email || !password||!nameFamily) {
             return res.status(400).json({ message: 'All fields are required' });
         }
         if (typeof password !== 'string' || !password.trim()) {
@@ -85,7 +85,7 @@ const updateUser =async(req,res)=>{
             return res.status(409).json({ message: "user not exist" });
         }
         const hashedPwd = await bcrypt.hash(password, 10);
-        const userObject = { nameFamily, email, password: hashedPwd,appartment, role,createdAt };
+        const userObject = { nameFamily, email, password: hashedPwd};
 
        const updatedUser=await Users.findByIdAndUpdate(duplicate._id,userObject,{new:true});
        if(!updatedUser){

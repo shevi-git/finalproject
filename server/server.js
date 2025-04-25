@@ -3,11 +3,11 @@ const app = express();
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
-const BuildingRouter = require("./Router/BuildingRouter");
 const AnnouncementRouter = require("./Router/AnnouncementRouter");
-const ChatMessageRouter=require("./Router/ChatMessageRouter");
-const registerRouter=require('./Router/UserRouter');
-const verifyJwt=require('./middleware/verifyJWT');
+const ChatMessageRouter = require("./Router/ChatMessageRouter");
+const UserRouter = require("./Router/UserRouter");
+const FamilyRouter = require("./Router/FamilyRouter"); // הראוטר של משפחות
+const cors =require('cors');
 dotenv.config();
 
 app.use(bodyParser.json());
@@ -21,13 +21,13 @@ mongoose.connect(connectd)
     .catch(err => {
         console.error('MongoDB connection error:', err);
     });
-
-app.use("/Build", BuildingRouter);
+    app.use(cors());
+// הגדרת הנתיבים
+app.use("/Family", FamilyRouter); // כאן אנחנו מגדירים את הראוטר של משפחות
 app.use("/Announcement", AnnouncementRouter);
-app.use("/ChatMessage",ChatMessageRouter);
-app.use("/register",registerRouter);
-app.use("/login",loginRouter);
-app.use("/update",verifyJwt,updateUserRouter);
+app.use("/ChatMessage", ChatMessageRouter);
+app.use("/user", UserRouter);
+
 
 const PORT = process.env.APP_PORT || 8080;
 app.listen(PORT, () => {
