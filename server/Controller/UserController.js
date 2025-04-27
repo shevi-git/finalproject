@@ -118,4 +118,25 @@ const deleteUser=async(req,res)=>{
         res.status(500).json({ message: "Server error" });
     }
 }
-module.exports = { register, login,updateUser,deleteUser };
+const getUser=async(req,res)=>{
+    try{
+        console.log("Request body:", req.body);
+    }catch(error){
+        console.error("Error in getUser function:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+}  
+const getAllUsers=async(req,res)=>{
+    try{
+        console.log("Request body:", req.body);
+        const users=await Users.find();
+        if(!users){
+            return res.status(404).json({message:"users not found"});
+        }
+        res.json({users});
+    }catch(error){
+        console.error("Error in getAllUsers function:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+module.exports = { register, login,updateUser,deleteUser,getUser,getAllUsers };
