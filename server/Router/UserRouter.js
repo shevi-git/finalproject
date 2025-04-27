@@ -10,7 +10,5 @@ const { register, login, updateUser, deleteUser } = require("../Controller/UserC
 router.post("/register", register);
 //router.post("/login", login);
 router.put("/update", updateUser);
-router.post("/login",login); 
-router.delete("/delete",  deleteUser);
 
 module.exports= router
