@@ -4,6 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import Home from './Componenta/Home'
 import User from './Componenta/User'
+import { Provider } from 'react-redux'
 
 
 function App() {
@@ -11,9 +12,10 @@ function App() {
 
   return (
     <>
+    
       <User/>
       <Home/>
-      hello
+     
     </>
   )
 }
