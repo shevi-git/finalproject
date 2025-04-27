@@ -29,7 +29,7 @@ app.use("/ChatMessage", ChatMessageRouter);
 app.use("/user", UserRouter);
 
 
-const PORT = process.env.APP_PORT || 8080;
+const PORT = process.env.APP_PORT || 8000;
 app.listen(PORT, () => {
     console.log("Server running on port", PORT);
 });

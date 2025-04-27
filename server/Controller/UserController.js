@@ -7,8 +7,8 @@ async function register(req, res) {
     try {
         console.log("Request body:", req.body);
 
-        const { nameFamily, email, password } = req.body;
-        if (!nameFamily || !email || !password) {
+        const { name, email, password } = req.body;
+        if (!name || !email || !password) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
@@ -22,11 +22,11 @@ async function register(req, res) {
         }
 
         const hashedPwd = await bcrypt.hash(password, 10);
-        const userObject = { nameFamily, email, password: hashedPwd };
+        const userObject = { name, email, password: hashedPwd };
 
         const user = await Users.create(userObject);
         if (user) {
-            return res.status(201).json({ message: `New user ${user.nameFamily} created` });
+            return res.status(201).json({ message: `New user ${user.name} created` });
         } else {
             return res.status(400).json({ message: 'Invalid user received' });
         }
