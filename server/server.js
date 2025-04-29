@@ -1,24 +1,22 @@
 const express = require("express");
-const https = require("https");
-const fs = require("fs");
-const app = express();
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const AnnouncementRouter = require("./Router/AnnouncementRouter");
-const ChatMessageRouter=require("./Router/ChatMessageRouter");
-const registerRouter=require('./Router/UserRouter');
-const verifyJwt=require('./middleware/verifyJWT');
+const ChatMessageRouter = require("./Router/ChatMessageRouter");
+const registerRouter = require('./Router/UserRouter');
+const verifyJwt = require('./middleware/verifyJWT');
+const FamilyRouter = require('./Router/FamilyRouter');
 dotenv.config();
 
-// טוען את התעודות
-const options = {
-  key: fs.readFileSync('localhost-key.pem'),
-  cert: fs.readFileSync('localhost.pem')
-};
+const app = express();
+const cors = require('cors');
+app.use(cors());
+
 
 app.use(bodyParser.json());
 
+// התחברות למסד נתונים
 const connectd = process.env.connectDb;
 
 mongoose.connect(connectd)
@@ -29,14 +27,14 @@ mongoose.connect(connectd)
         console.error('MongoDB connection error:', err);
     });
 
-app.use("/Build", BuildingRouter);
+// ראוטים
+app.use("/Family", FamilyRouter);
 app.use("/Announcement", AnnouncementRouter);
-app.use("/ChatMessage",ChatMessageRouter);
-app.use("/register",registerRouter);
-app.use("/login",loginRouter);
-app.use("/update",verifyJwt,updateUserRouter);
+app.use("/ChatMessage", ChatMessageRouter);
+app.use("/user", registerRouter); // שמתי "user" כמו ששלחת
+// שים לב: אתה צריך לייבא גם updateUserRouter אם אתה רוצה להשתמש בו!
 
-const PORT = process.env.APP_PORT || 8080;
+const PORT = process.env.APP_PORT || 8000;
 app.listen(PORT, () => {
     console.log("Server running on port", PORT);
 });

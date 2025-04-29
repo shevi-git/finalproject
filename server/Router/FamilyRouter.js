@@ -1,13 +1,14 @@
-const express = require("express")
-const router = express.Router()
+const express = require("express");
+const router = express.Router();
 
-const JWTCheckFamily = require('../middleware/verifyJWT'); // מייבאים את המידלוור של ה-JWT
+const { createFamily, updateFamily, getAllFamilies, getFamilyById } = require("../Controller/FamilyController");
+const { verifyJwt } = require("../middleware/verifyJWT");
+const { verifyFamilyOwner } = require("../middleware/verifyFamilyOwner");
 
-const { createFamily,updateFamily,getAllFamilies}= require("../Controller/FamilyController")
+router.post("/createFamily", verifyJwt, createFamily);
+router.put("/updateFamily/:id", verifyJwt, verifyFamilyOwner, updateFamily);
+router.get("/getAllFamilies", getAllFamilies);
+router.get('/:id', getFamilyById);
 
-router.put("updateFamily/:id", updateFamily);
-router.post("/createFamily", createFamily)
-router.get("/getAllFamilies",getAllFamilies);
 
-
-module.exports= router
+module.exports = router;

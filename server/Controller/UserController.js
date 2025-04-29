@@ -3,7 +3,7 @@ const Users = require("../Moduls/UserSchema");
 const bcrypt = require("bcrypt");
 const jwt=require("jsonwebtoken");
 
-async function register(req, res) {
+const register = async (req, res) => {
     try {
         console.log("Request body:", req.body);
 
@@ -26,11 +26,21 @@ async function register(req, res) {
 
         const user = await Users.create(userObject);
         if (user) {
-            return res.status(201).json({ message: `New user ${user.name} created` });
+            // יצירת טוקן JWT
+            const accessToken = jwt.sign(
+                { name: user.name, email: user.email },
+                process.env.ACCESS_TOKEN_SECRET,
+                { expiresIn: '1h' } // הגדרת זמן תפוגה של הטוקן
+            );
+
+            return res.status(201).json({
+                message: `New user ${user.name} created`,
+                accessToken: accessToken, // מחזירים את הטוקן ללקוח
+            });
         } else {
             return res.status(400).json({ message: 'Invalid user received' });
         }
-       
+
     } catch (error) {
         console.error("Error in register function:", error);
         res.status(500).json({ message: "Server error" });
@@ -63,12 +73,18 @@ const login = async (req, res) => {
             { expiresIn: '1h' }
         );
 
-        res.json({ message: 'Logged In', accessToken: accessToken });
+        // מחזירים את הטוקן בתגובה
+        res.json({
+            message: 'Logged In',
+            accessToken: accessToken // ודא שהשם הוא accessToken
+        });
+
     } catch (error) {
         console.error("Error in login function:", error);
         res.status(500).json({ message: "Server error" });
     }
 }
+
 
 const updateUser =async(req,res)=>{
     try{
