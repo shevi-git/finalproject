@@ -5,11 +5,10 @@ import App from './App.jsx'
 import { Provider } from 'react-redux'
 import UserSlice from './Store/UserSlice';
 import { configureStore } from '@reduxjs/toolkit'
-import { BrowserRouter } from 'react-router-dom'
-
 const myStore=configureStore({
   reducer:{
-    UserSlice:UserSlice
+    UserSlice:UserSlice,
+    familySlice: familySlice,
   }
 })
 createRoot(document.getElementById('root')).render(

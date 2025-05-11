@@ -1,85 +1,67 @@
-const familySchema=require("../Moduls/familySchema");
+const Family = require('../Moduls/familySchema');
 
-async function createFamily(req, res) {
+const createFamily = async (req, res) => {
+    const { nameFamily, floor, electricity, water, amountChildren, role, password } = req.body;
     try {
-        const newfamily = req.body;
-        let family1 = new familySchema(newfamily);
-        await family1.save();
-        res.status(201).json(family1);
+        const newFamily = new Family({
+            nameFamily,floor,electricity,water,amountChildren,role,password
+        });
+
+        await newFamily.save();
+        res.status(201).json(newFamily);
     } catch (error) {
-        res.status(500).json({ message: "Error creating building", error });
+        console.error("Error creating family:", error);
+        res.status(500).json({ message: "Server error" });
     }
-}
+};
+
 
 const updateFamily = async (req, res) => {
-    try {
-      const { id } = req.params;
-      if (!req.body) {
-        return res.status(400).json({ message: "No update data provided" });
-      }
-  
-      // בודקים אילו שדות מותר לעדכן
-      const allowedFields = [
-        "nameFamily",
-        "floor",
-        "electricity",
-        "water",
-        "amountChildren",
-        "type",
-        "role",
-      ];
-  
-      const updates = {};
-      for (let field of allowedFields) {
-        if (req.body[field] !== undefined) {
-          updates[field] = req.body[field];
-        }
-      }
-  
-      // אין שדות לעדכן אחרי סינון
-      if (Object.keys(updates).length === 0) {
-        return res.status(400).json({ message: "No valid fields to update" });
-      }
-  
-      const updatedFamily = await Family.findByIdAndUpdate(
-        id,
-        { $set: updates },
-        { new: true, runValidators: true }
-      );
-  
-      if (!updatedFamily) {
-        return res.status(404).json({ message: "Family not found" });
-      }
-  
-      res.json({ message: "Family updated successfully", family: updatedFamily });
-    } catch (err) {
-      console.error("Error updating family:", err);
-      res.status(500).json({ message: "Server error" });
-    }
-  };
+    const { id } = req.params;
+    const { nameFamily, floor, electricity, water, amountChildren, role } = req.body;
 
-async function deleteFamily(params) {
-    
-}
+    try {
+        const family = await Family.findById(id);
+        if (!family) {
+            return res.status(404).json({ message: "Family not found" });
+        }
+
+        family.nameFamily = nameFamily || family.nameFamily;
+        family.floor = floor || family.floor;
+        family.electricity = electricity || family.electricity;
+        family.water = water || family.water;
+        family.amountChildren = amountChildren || family.amountChildren;
+        family.role = role || family.role;
+
+        await family.save();
+        res.status(200).json(family);
+    } catch (error) {
+        console.error("Error updating family:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
 
 const getAllFamilies = async (req, res) => {
-  try {
-      // אין צורך לבדוק את req.body כי אנחנו רוצים את כל המשפחות
-      const families = await familySchema.find().lean().exec();
-      
-      if (!families || families.length === 0) {
-          return res.status(404).json({ message: "No families found" });
-      }
+    try {
+        const families = await Family.find();
+        if (!families) {
+            return res.status(404).json({ message: "Families not found" });
+        }
+        res.status(200).json(families);
+    } catch (error) {
+        console.error("Error fetching families:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+const getFamilyById = async (req, res) => {
+    try {
+        const family = await Family.findById(req.params.id);
+        if (!family) return res.status(404).json({ message: 'לא נמצאה משפחה' });
+        res.json(family);
+    } catch (error) {
+        res.status(500).json({ message: 'שגיאה בשרת', error });
+    }
+};
 
-      // מחזירה את כל המשפחות
-      return res.status(200).json(families);
-      
-  } catch (error) {
-      console.error("Error in getAllFamilies function:", error);
-      return res.status(500).json({ message: "Server error" });
-  }
-}
+module.exports = { createFamily, updateFamily, getAllFamilies, getFamilyById };
 
-
-
-module.exports={createFamily,updateFamily,deleteFamily,getAllFamilies};

@@ -1,16 +1,14 @@
-
-const express = require("express")
-const router = express.Router()
-const verifyJwt = require("../middleware/verifyJWT");
-const UserController = require("../Controller/UserController");
-
+const express = require("express");
+const router = express.Router();
 const { register, login, updateUser, deleteUser } = require("../Controller/UserController");
 
-
+// רישום משתמש חדש
 router.post("/register", register);
-//router.post("/login", login);
+
+// התחברות משתמש
+router.post("/login", login);
+
+// עדכון פרטי משתמש - מוגן ע"י JWT
 router.put("/update", updateUser);
-router.post("/login", login); 
 
-
-module.exports= router
+module.exports = router;
