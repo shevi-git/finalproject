@@ -35,7 +35,7 @@ const FamilyDetails = () => {
       <p>מספר ילדים: {family.amountChildren}</p>
       <p>תפקיד: {family.role}</p>
     </div>
-    <button>עדכון משפחה</button>
+    {/* <button>עדכון משפחה</button> */}
     </>
   );
 };

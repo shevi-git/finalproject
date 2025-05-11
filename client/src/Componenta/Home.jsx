@@ -1006,6 +1006,7 @@ const Home = () => {
               >
                 שלח הודעה
               </Button>
+              <Button>עדכון משפחה</Button>
               <Button 
                 variant="contained"
                 onClick={() => setDialogOpen(false)}

@@ -5,7 +5,7 @@ import App from './App.jsx'
 import { Provider } from 'react-redux'
 import UserSlice from './Store/UserSlice';
 import { configureStore } from '@reduxjs/toolkit'
-import familySlice from './Store/familySlice .jsx'
+import familySlice from './Store/familySlice.jsx'
 
 const myStore=configureStore({
   reducer:{

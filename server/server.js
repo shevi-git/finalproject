@@ -7,7 +7,8 @@ const ChatMessageRouter = require("./Router/ChatMessageRouter");
 const registerRouter = require('./Router/UserRouter');
 const verifyJwt = require('./middleware/verifyJWT');
 const FamilyRouter = require('./Router/FamilyRouter');
-dotenv.config();
+// dotenv.config();
+require('dotenv').config();
 
 const app = express();
 const cors = require('cors');
@@ -17,9 +18,9 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // התחברות למסד נתונים
-const connectd = process.env.connectDb;
+const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(connectd)
+mongoose.connect(MONGO_URI)
     .then(() => {
         console.log('Connected to MongoDB');
     })
