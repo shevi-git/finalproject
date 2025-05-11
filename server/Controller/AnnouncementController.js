@@ -2,28 +2,36 @@ const Announcement = require("../Moduls/AnnouncementSchema");
 
 async function createAnnouncement(req, res) {
     try {
-        // מקבלים את תוכן המודעה מה-body של הבקשה
-        const { title, content } = req.body;
+        console.log("Received request body:", req.body);
+        const { title, content,type, createBy } = req.body;
 
-        // בודקים אם יש טייטל ותוכן
-        if (!title || !content) {
+        if (!title || !content|| !type) {
+            console.log("Missing required fields");
             return res.status(400).json({ message: "Title and content are required" });
         }
 
-        // יוצרים מודעה חדשה
         const newAnnouncement = new Announcement({
             title,
             content,
-            // createBy: req.user.id // המידע על המשתמש שמייצר את המודעה מתוך ה-JWT
+            type,
+            createBy: createBy || "ועד הבית"
         });
 
-        // שומרים את המודעה ב-database
-        await newAnnouncement.save();
+        console.log("New announcement to save:", newAnnouncement);
+        const savedAnnouncement = await newAnnouncement.save();
+        console.log("Announcement saved successfully:", savedAnnouncement);
 
-        return res.status(201).json({ message: "Announcement created successfully", newAnnouncement });
+        return res.status(201).json({ 
+            message: "Announcement created successfully", 
+            newAnnouncement: savedAnnouncement 
+        });
 
     } catch (error) {
-        return res.status(500).json({ message: "Error creating announcement", error });
+        console.error("Error in createAnnouncement:", error);
+        return res.status(500).json({ 
+            message: "Error creating announcement", 
+            error: error.message 
+        });
     }
 }
 
@@ -56,7 +64,7 @@ async function deleteAnnouncement(req, res) {
 async function updateAnnouncement(req, res) {
     try {
         const { id } = req.params; // מזהה המודעה מתוך ה-URL
-        const { title, content } = req.body; // הנתונים החדשים מתוך ה-Body
+        const { title, content, type } = req.body; // הנתונים החדשים מתוך ה-Body
 
         // מציאת המודעה לפי ID
         const announcement = await Announcement.findById(id);
@@ -69,6 +77,8 @@ async function updateAnnouncement(req, res) {
         // עדכון המודעה עם הנתונים החדשים
         if (title) announcement.title = title;
         if (content) announcement.content = content;
+        if (type) announcement.type = type;
+        
 
         // שמירה של המודעה המעודכנת
         await announcement.save();
@@ -82,13 +92,19 @@ async function updateAnnouncement(req, res) {
 
 async function getAnnouncements(req, res) {
     try {
-        // שולפים את כל המודעות מהמסד נתונים
-        const announcements = await Announcement.find().populate('createBy', 'name'); // populate משלים את המידע על המשתמש (אם רוצים שם למשל)
-        return res.status(200).json({ announcements });
+        console.log("Fetching all announcements");
+        const announcements = await Announcement.find().sort({ createDate: -1 });
+        console.log("Found announcements:", announcements);
+        return res.status(200).json(announcements); // מחזיר ישירות מערך
     } catch (error) {
-        return res.status(500).json({ message: "Error fetching announcements", error });
+        console.error("Error in getAnnouncements:", error);
+        return res.status(500).json({ 
+            message: "Error fetching announcements", 
+            error: error.message 
+        });
     }
 }
+
 
 async function getAnnouncementById(req, res) {
     try {

@@ -20,7 +20,7 @@ export const User = () => {
             const payload = action === 'register'
                 ? { name: data.username, email: data.email, password: data.password }
                 : { email: data.email, password: data.password };
-            const response = await axios.post(`http://localhost:8000/user${endpoint}`, payload);
+            const response = await axios.post(`http://localhost:3000/user${endpoint}`, payload);
             dispatch(saveUser({ name: data.username, email: data.email }));
             if (action === 'register') {
                 console.log('נרשמת בהצלחה:', { name: data.username, email: data.email });
@@ -137,5 +137,25 @@ export const User = () => {
         </FormProvider>
     );
 };
+// const [users, setUsers] = useState([]);
+    // useEffect(() => {
+    //     axios.get('https://localhost:3000/Family/getAllFamilies')
+    //         .then(Response => {
+    //             console.log(Response.data);
+                
+    //             setUsers(Response.data);
+    //         })
+    //         .catch(error => {
+    //             console.log("שגיאה בקבלת הנתונים",error);
+
+    //         })
+    // }, [])
+    // return (
+    //     <ul>
+    //         {users.map(user => (
+    //             <li key={user.nameFamily}>{user.nameFamily}</li>
+    //         ))}
+    //     </ul>
+    // )
 
 export default User;
