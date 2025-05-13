@@ -10,7 +10,7 @@ const FamilyDetails = () => {
   useEffect(() => {
     const fetchFamily = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/Family/${id}`);
+        const response = await axios.get(`http://localhost:3000/Family/${id}`);
         setFamily(response.data);
       } catch (error) {
         console.error("שגיאה בקבלת פרטי המשפחה", error);

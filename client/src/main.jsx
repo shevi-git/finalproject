@@ -5,6 +5,9 @@ import App from './App.jsx'
 import { Provider } from 'react-redux'
 import UserSlice from './Store/UserSlice';
 import { configureStore } from '@reduxjs/toolkit'
+import familySlice from './Store/familySlice.jsx';
+import {BrowserRouter} from 'react-router-dom'
+import AppRoute from './AppRoutes.jsx'
 const myStore=configureStore({
   reducer:{
     UserSlice:UserSlice,
@@ -15,7 +18,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={myStore}>
       <BrowserRouter>
-        <App />
+        <AppRoute/>
       </BrowserRouter>
     </Provider>
   </StrictMode>,

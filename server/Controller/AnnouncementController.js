@@ -5,10 +5,11 @@ async function createAnnouncement(req, res) {
         console.log("Received request body:", req.body);
         const { title, content,type, createBy } = req.body;
 
-        if (!title || !content|| !type) {
+        if (!title || !content) {
             console.log("Missing required fields");
             return res.status(400).json({ message: "Title and content are required" });
         }
+        
 
         const newAnnouncement = new Announcement({
             title,

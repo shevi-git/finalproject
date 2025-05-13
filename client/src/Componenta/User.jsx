@@ -195,7 +195,7 @@ export const User = () => {
             const payload = action === 'register'
                 ? { name: data.username, email: data.email, password: data.password }
                 : { email: data.email, password: data.password };
-            const response = await axios.post(`http://localhost:8000/user${endpoint}`, payload);
+            const response = await axios.post(`http://localhost:3000/user${endpoint}`, payload);
             dispatch(saveUser({ name: data.username, email: data.email }));
             // או אם את משתמשת ב-Redux, תוכל להפעיל דיפוז יצירת פעולה שתשמור אותו בסטייט
 

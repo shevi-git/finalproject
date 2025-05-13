@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const app = express();
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const AnnouncementRouter = require("./Router/AnnouncementRouter");
@@ -13,7 +14,7 @@ app.use(bodyParser.json());
 app.use(cors(
 ));
 
-const connectd = process.env.connectDb;
+const connectd = process.env.MONGO_URI;
 
 mongoose.connect(connectd)
     .then(() => {
