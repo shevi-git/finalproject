@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Box, 
-  Typography, 
-  TextField, 
-  Select, 
-  MenuItem, 
-  FormControl, 
-  InputLabel, 
-  Container, 
-  Paper,
-  Button
+    Box, 
+    Typography, 
+    TextField, 
+    Select, 
+    MenuItem, 
+    FormControl, 
+    InputLabel, 
+    Container, 
+    Paper,
+    Button
 } from '@mui/material';
 
 const CreateAnnouncement = () => {
@@ -32,16 +32,17 @@ const CreateAnnouncement = () => {
     }
     
     const handleMessageTypeChange = () => {
-        navigate('/Announcement', { 
-            state: { 
+        navigate('/Announcement', {
+            state: {
                 sex: null,
                 nameFamily: null,
                 wedding: null,
-                message: notes
-            } 
+                message: notes,
+                type: 'הודעות'
+            }
         });
     }
-    
+
     // Handle celebration type selection
     const handleCelebrationTypeChange = (e) => {
         const answer = e.target.value;
@@ -49,24 +50,28 @@ const CreateAnnouncement = () => {
         
         // For Bar Mitzvah, automatically set sex to male and navigate
         if (answer === "בר מצוה") {
-            navigate('/Announcement', { 
-                state: { 
+            navigate('/Announcement', {
+                state: {
                     sex: "בן",
                     nameFamily: nameFamily,
                     wedding: "היכנס בינכם לעול תורה ומצוות",
-                    message: null
-                } 
+                    message: null,
+                    type: 'שמחות',
+                    celebrationType: answer
+                }
             });
         }
         // For Bat Mitzvah, automatically set sex to female and navigate
         else if (answer === "בת מצוה") {
-            navigate('/Announcement', { 
-                state: { 
+            navigate('/Announcement', {
+                state: {
                     sex: "בת",
                     nameFamily: nameFamily,
                     wedding: "היכנס בינכם לעול תורה ומצוות",
-                    message: null
-                } 
+                    message: null,
+                    type: 'שמחות',
+                    celebrationType: answer
+                }
             });
         }
     }
@@ -75,13 +80,15 @@ const CreateAnnouncement = () => {
     const handleBirthSelection = (e) => {
         const answer = e.target.value;
         setSex(answer);
-        navigate('/Announcement', { 
-            state: { 
+        navigate('/Announcement', {
+            state: {
                 sex: answer,
                 nameFamily: nameFamily,
                 wedding: "הולדת",
-                message: null
-            } 
+                message: null,
+                type: 'שמחות',
+                celebrationType: 'תינוק/ תינוקת'
+            }
         });
     }
 
@@ -89,13 +96,15 @@ const CreateAnnouncement = () => {
     const handleWeddingSelection = (e) => {
         const answer = e.target.value;
         setSex(answer);
-        navigate('/Announcement', { 
-            state: { 
+        navigate('/Announcement', {
+            state: {
                 sex: answer,
                 nameFamily: nameFamily,
                 wedding: "אירוסי",
-                message: null
-            } 
+                message: null,
+                type: 'שמחות',
+                celebrationType: 'חתונה'
+            }
         });
     }
 
@@ -140,7 +149,7 @@ const CreateAnnouncement = () => {
                     <Typography variant="h4" component="h1" gutterBottom>
                         יצירת מודעה חדשה
                     </Typography>
-                    
+
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 3 }}>
                         <TextField
                             fullWidth

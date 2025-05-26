@@ -1,14 +1,46 @@
-const mongoose=require("mongoose");
+const mongoose = require("mongoose");
 
-const FamilySchema=new mongoose.Schema({
-    nameFamily:{type:String,require:true},
-    floor:{type:Number,require:true},
-    electricity:{type:Number,require:true},
-    water:{type:Number,require:true},
-    amountChildren:{type:Number,require:true,default:0},
+const FamilySchema = new mongoose.Schema({
+    nameFamily: {
+        type: String,
+        required: [true, 'שם המשפחה הוא שדה חובה'],
+        trim: true
+    },
+    floor: {
+        type: Number,
+        required: [true, 'מספר הקומה הוא שדה חובה'],
+        min: [0, 'מספר הקומה חייב להיות 0 או יותר'],
+        max: [6, 'מספר הקומה לא יכול להיות גדול מ-6']
+    },
+    electricity: {
+        type: Number,
+        default: 0,
+        min: [0, 'ערך החשמל חייב להיות 0 או יותר']
+    },
+    water: {
+        type: Number,
+        default: 0,
+        min: [0, 'ערך המים חייב להיות 0 או יותר']
+    },
+    amountChildren: {
+        type: Number,
+        default: 0,
+        min: [0, 'מספר הילדים חייב להיות 0 או יותר']
+    },
     // type:{type:String,require:true},
-    role: { type: String, enum: ["שכן רגיל", "ועד בית"], default: "שכן רגיל" },
-    password:{type:Number,require:true}  
-})
-module.exports=mongoose.model("FamilySchema",FamilySchema);
+    role: {
+        type: String,
+        enum: ["ועד בית", "שכן רגיל"],
+        default: "שכן רגיל"
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: [true, 'מזהה המשתמש הוא שדה חובה']
+    }
+}, {
+    timestamps: true
+});
+
+module.exports = mongoose.model("Family", FamilySchema);
 

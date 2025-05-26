@@ -111,7 +111,7 @@ const Announcement = () => {
        
         try {
             console.log("שולח נתונים לשרת:", JSON.stringify(announcementData, null, 2));
-            const response = await axios.post(`http://localhost:3000/Announcement/CreateAnnouncement`, announcementData);
+            const response = await axios.post(`http://localhost:8000/Announcement/CreateAnnouncement`, announcementData);
             console.log("תשובה מהשרת:", JSON.stringify(response.data, null, 2));
             
             if (response.status === 200 || response.status === 201) {
@@ -120,7 +120,7 @@ const Announcement = () => {
 
                 // קבלת כל המודעות אחרי השמירה
                 try {
-                    const allAnnouncements = await axios.get(`http://localhost:3000/Announcement/getAnnouncements`);
+                    const allAnnouncements = await axios.get(`http://localhost:8000/Announcement/getAnnouncements`);
                     console.log("כל המודעות במערכת:", JSON.stringify(allAnnouncements.data, null, 2));
                 } catch (error) {
                     console.error("שגיאה בקבלת המודעות:", error.response?.data || error.message);
@@ -133,38 +133,7 @@ const Announcement = () => {
         }
     };
 
-    const handleShare = async () => {
-        if (!announcementRef.current || !navigator.share) {
-            setSnackbarOpen(true);
-            return;
-        }
-        
-        try {
-            const canvas = await html2canvas(announcementRef.current);
-            
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    throw new Error("Failed to create image blob");
-                }
-                
-                const file = new File([blob], `announcement-${nameFamily || 'message'}.png`, { type: 'image/png' });
-                
-                try {
-                    await navigator.share({
-                        title: isMessageType ? 'הודעה חשובה' : `מזל טוב למשפחת ${nameFamily}`,
-                        text: isMessageType ? 'הודעה' : 'מזל טוב!',
-                        files: [file]
-                    });
-                } catch (shareError) {
-                    console.error("Error in share operation:", shareError);
-                    setSnackbarOpen(true);
-                }
-            }, 'image/png');
-        } catch (error) {
-            console.error("Error preparing image for sharing:", error);
-            setSnackbarOpen(true);
-        }
-    };
+    
 
     return (
         <>

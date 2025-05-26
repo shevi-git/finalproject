@@ -1,25 +1,14 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
-import { Provider } from 'react-redux'
-import UserSlice from './Store/UserSlice';
-import { configureStore } from '@reduxjs/toolkit'
-import familySlice from './Store/familySlice.jsx';
-import {BrowserRouter} from 'react-router-dom'
-import AppRoute from './AppRoutes.jsx'
-const myStore=configureStore({
-  reducer:{
-    UserSlice:UserSlice,
-    familySlice: familySlice,
-  }
-})
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <Provider store={myStore}>
-      <BrowserRouter>
-        <AppRoute/>
-      </BrowserRouter>
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { store } from './redux/store';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <App />
     </Provider>
-  </StrictMode>,
-)
+  </React.StrictMode>
+);

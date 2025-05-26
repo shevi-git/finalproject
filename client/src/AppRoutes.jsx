@@ -149,8 +149,8 @@ function AppRoutes() {
 
   // Navigation items, kept consistent between mobile and desktop
   const navItems = [
-    { path: "/Home", label: "דף הבית", icon: <HomeIcon fontSize={isMobile ? "default" : "small"} /> },
-    { path: "/", label: "התחברות והרשמה", icon: <Person fontSize={isMobile ? "default" : "small"} /> },
+    { path: "/", label: "דף הבית", icon: <HomeIcon fontSize={isMobile ? "default" : "small"} /> },
+    { path: "/login", label: "התחברות והרשמה", icon: <Person fontSize={isMobile ? "default" : "small"} /> },
     { path: "/NoticeBoard", label: "ללוח המודעות", icon: <Notifications fontSize={isMobile ? "default" : "small"} /> }
   ];
 
@@ -296,34 +296,12 @@ function AppRoutes() {
       {/* Page transitions */}
       <Container maxWidth="lg" sx={{ mt: '70px', pt: 2, pb: 6 }}>
         <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial="initial"
-            animate="in"
-            exit="exit"
-            variants={pageVariants}
-            transition={{ duration: 0.3 }}
-            style={{ width: '100%' }}
-          >
-            <Routes>
-              <Route path="/Home" element={<Home />} />
-              <Route path="/" element={<User />} />
-              <Route path="/CreateAnnouncement" element={<CreateAnnouncement />} />
-              <Route path="/NoticeBoard" element={<NoticeBoard />} />
-              <Route 
-                path="/Announcement" 
-                element={
-                  <Announcement 
-                    sex={location.state?.sex} 
-                    nameFamily={location.state?.nameFamily}
-                    wedding={location.state?.wedding}
-                  />
-                } 
-              />
-              {/* Catch all other routes */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </motion.div>
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<User />} />
+            <Route path="/NoticeBoard" element={<NoticeBoard />} />
+            <Route path="/Announcement" element={<Announcement />} />
+          </Routes>
         </AnimatePresence>
       </Container>
 

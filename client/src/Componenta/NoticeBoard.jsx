@@ -84,6 +84,12 @@ const NoticeBoard = () => {
     }
   `;
   
+  // סטייט למחיקת מודעה
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [noticeToDelete, setNoticeToDelete] = useState(null);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState(null);
+  
   // פונקציה עזר לקבלת האות הראשונה בשם המחבר בצורה בטוחה
   const getAuthorInitial = (notice) => {
     // בדיקה אם יש שדה author
@@ -107,86 +113,22 @@ const NoticeBoard = () => {
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/Announcement/getAnnouncements');
+        const response = await axios.get('http://localhost:8000/Announcement/getAnnouncements');
         console.log('תשובה מהשרת:', response.data);
     
-        // בודקים אם התשובה כוללת את השדה announcements שמכיל מערך
-        if (Array.isArray(response.data.announcements)) {
-          setNotices(response.data.announcements); // עדכון ה-state עם הרשימה
-          setLoading(false); // סיום טעינה
+        // השרת מחזיר מערך ישירות
+        if (Array.isArray(response.data)) {
+          setNotices(response.data);
+          setLoading(false);
         } else {
           console.error('מבנה תשובה לא צפוי מהשרת:', response.data);
-          // טעינת נתוני דוגמה
-          setNotices([
-            {
-              id: 1,
-              title: "אסיפת דיירים שנתית",
-              content: "האסיפה השנתית תתקיים ביום ראשון הקרוב בשעה 19:00 בלובי הבניין.\n\nנדון בנושאים חשובים כמו:\n- תקציב שנתי\n- תחזוקת הבניין\n- הצעות לשיפורים\n\nנוכחות כל הדיירים חשובה!",
-              date: "2025-05-15",
-              type: "meeting",
-              author: "ועד הבית",
-              important: true
-            },
-            {
-              id: 2,
-              title: "עבודות צביעה בלובי",
-              content: "בתאריכים 20-22 למאי יתבצעו עבודות צביעה בלובי הבניין.\n\nנא להימנע מלגעת בקירות ולהיזהר מהסולמות והציוד.\n\nהעבודות יתבצעו בין השעות 8:00-16:00.",
-              date: "2025-05-12",
-              type: "maintenance",
-              author: "חברת האחזקה",
-              important: false
-            },
-            {
-              id: 3,
-              title: "חגיגת קיץ לדיירי הבניין",
-              content: "שמחים להזמין את כל דיירי הבניין לחגיגת קיץ שתתקיים בגינת הבניין ב-1 ליוני בשעה 17:00.\n\nיהיו:\n- מנגל\n- משחקים לילדים\n- פעילויות לכל המשפחה\n\nכל משפחה מתבקשת להביא מאכל אחד לשיתוף.",
-              date: "2025-05-20",
-              type: "celebration",
-              author: "ועדת תרבות",
-              important: true
-            }
-          ]);
-          setLoading(false); // סיום טעינה גם במקרה של שגיאה
+          setNotices([]);
+          setLoading(false);
         }
       } catch (error) {
         console.error("שגיאה בטעינת המודעות:", error);
-    
-        // במקרה של שגיאה, מניחים נתונים זמניים
-        setNotices([
-          {
-            id: 1,
-            title: "אסיפת דיירים שנתית",
-            content: "האסיפה השנתית תתקיים ביום ראשון הקרוב בשעה 19:00 בלובי הבניין.\n\nנדון בנושאים חשובים כמו:\n- תקציב שנתי\n- תחזוקת הבניין\n- הצעות לשיפורים\n\nנוכחות כל הדיירים חשובה!",
-            date: "2025-05-15",
-            type: "meeting",
-            author: "ועד הבית",
-            important: true
-          },
-          {
-            id: 2,
-            title: "עבודות צביעה בלובי",
-            content: "בתאריכים 20-22 למאי יתבצעו עבודות צביעה בלובי הבניין.\n\nנא להימנע מלגעת בקירות ולהיזהר מהסולמות והציוד.\n\nהעבודות יתבצעו בין השעות 8:00-16:00.",
-            date: "2025-05-12",
-            type: "maintenance",
-            author: "חברת האחזקה",
-            important: false
-          },
-          {
-            id: 3,
-            title: "חגיגת קיץ לדיירי הבניין",
-            content: "שמחים להזמין את כל דיירי הבניין לחגיגת קיץ שתתקיים בגינת הבניין ב-1 ליוני בשעה 17:00.\n\nיהיו:\n- מנגל\n- משחקים לילדים\n- פעילויות לכל המשפחה\n\nכל משפחה מתבקשת להביא מאכל אחד לשיתוף.",
-            date: "2025-05-20",
-            type: "celebration",
-            author: "ועדת תרבות",
-            important: true
-          }
-        ]);
-        setLoading(false); // שינוי מיידי ללא setTimeout
-          
-        // אפקט הופעה הדרגתית לאחר טעינה ראשונית
-        setTimeout(() => {
-          setIsInitialLoad(false);
-        }, 500);
+        setNotices([]);
+        setLoading(false);
       }
     };
   
@@ -227,17 +169,16 @@ const NoticeBoard = () => {
   // פורמט תאריך
   const formatDate = (dateString) => {
     try {
-      if (!dateString) return "תאריך לא זמין";
-      
+      if (!dateString) return null;
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        return "תאריך לא תקין";
+        return null;
       }
       const options = { year: 'numeric', month: 'long', day: 'numeric' };
       return date.toLocaleDateString('he-IL', options);
     } catch (error) {
       console.error("Error formatting date:", error);
-      return "תאריך לא תקין";
+      return null;
     }
   };
 
@@ -276,7 +217,7 @@ const NoticeBoard = () => {
     let type = 'info';
     
     if (data.announcementType === 'הודעות') {
-      title = 'הודעה כללית';
+      title =  'לשכנים היקרים!';
       content = data.notes;
       type = 'info';
     } 
@@ -343,7 +284,6 @@ const NoticeBoard = () => {
     }
   };
 
-  // קבלת אייקון לפי סוג מודעה
   const getTypeIcon = (type) => {
     switch(type) {
       case 'info': return 'ℹ️';
@@ -390,6 +330,35 @@ const NoticeBoard = () => {
     return <div>{formattedText}</div>;
   };
 
+  // פונקציה למחיקת מודעה
+  const handleDeleteNotice = async (id) => {
+    try {
+      const response = await axios.delete(`http://localhost:8000/Announcement/deleteAnnouncement/${id}`, {
+        data: { password: deletePassword },
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.status === 200) {
+        setNotices(prev => prev.filter(notice => notice._id !== id));
+        setDeleteDialogOpen(false);
+        setDeletePassword('');
+        setDeleteError(null);
+      }
+    } catch (error) {
+      setDeleteError(error.response?.data?.message || 'שגיאה במחיקת המודעה');
+    }
+  };
+
+  // פותח דיאלוג מחיקה
+  const handleOpenDeleteDialog = (notice) => {
+    setNoticeToDelete(notice);
+    setDeleteDialogOpen(true);
+    setDeletePassword('');
+    setDeleteError(null);
+  };
+
   return (
     <div dir="rtl" style={{ 
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -434,166 +403,6 @@ const NoticeBoard = () => {
           }}></div>
         </h1>
         <p style={{ color: '#64748b', margin: '16px 0 0 0' }}>המקום להתעדכן בכל האירועים והחדשות החשובות של הבניין</p>
-      </div>
-
-      {/* סרגל פילטרים וכפתורים */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        padding: '16px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-        marginBottom: '24px',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: '10px',
-        zIndex: 100,
-        backdropFilter: 'blur(10px)',
-        animation: isInitialLoad ? 'fadeIn 0.5s ease-out 0.2s both' : 'none'
-      }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          <button 
-            onClick={() => setActiveTab('all')}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'all' ? '#3b82f6' : '#f1f5f9',
-              color: activeTab === 'all' ? 'white' : '#475569',
-              transition: 'all 0.2s ease',
-              boxShadow: activeTab === 'all' ? '0 2px 4px rgba(59, 130, 246, 0.3)' : 'none'
-            }}
-          >
-            הכל
-          </button>
-          <button 
-            onClick={() => setActiveTab('info')}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'info' ? '#3b82f6' : '#f1f5f9',
-              color: activeTab === 'info' ? 'white' : '#475569',
-              transition: 'all 0.2s ease',
-              boxShadow: activeTab === 'info' ? '0 2px 4px rgba(59, 130, 246, 0.3)' : 'none'
-            }}
-          >
-            ℹ️ מידע
-          </button>
-          <button 
-            onClick={() => setActiveTab('maintenance')}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'maintenance' ? '#f97316' : '#f1f5f9',
-              color: activeTab === 'maintenance' ? 'white' : '#475569',
-              transition: 'all 0.2s ease',
-              boxShadow: activeTab === 'maintenance' ? '0 2px 4px rgba(249, 115, 22, 0.3)' : 'none'
-            }}
-          >
-            🔧 תחזוקה
-          </button>
-          <button 
-            onClick={() => setActiveTab('meeting')}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'meeting' ? '#22c55e' : '#f1f5f9',
-              color: activeTab === 'meeting' ? 'white' : '#475569',
-              transition: 'all 0.2s ease',
-              boxShadow: activeTab === 'meeting' ? '0 2px 4px rgba(34, 197, 94, 0.3)' : 'none'
-            }}
-          >
-            👥 אסיפות
-          </button>
-          <button 
-            onClick={() => setActiveTab('celebration')}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'celebration' ? '#ec4899' : '#f1f5f9',
-              color: activeTab === 'celebration' ? 'white' : '#475569',
-              transition: 'all 0.2s ease',
-              boxShadow: activeTab === 'celebration' ? '0 2px 4px rgba(236, 72, 153, 0.3)' : 'none'
-            }}
-          >
-            🎉 אירועים
-          </button>
-          <button 
-            onClick={() => setActiveTab('alert')}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              backgroundColor: activeTab === 'alert' ? '#ef4444' : '#f1f5f9',
-              color: activeTab === 'alert' ? 'white' : '#475569',
-              transition: 'all 0.2s ease',
-              boxShadow: activeTab === 'alert' ? '0 2px 4px rgba(239, 68, 68, 0.3)' : 'none'
-            }}
-          >
-            ⚠️ התראות
-          </button>
-        </div>
-
-        <button 
-          onClick={() => setShowModal(true)}
-          style={{
-            padding: '10px 20px',
-            borderRadius: '8px',
-            border: 'none',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 8px rgba(37, 99, 235, 0.25)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 6px rgba(37, 99, 235, 0.2)';
-          }}
-        >
-          {/* אפקט הברקה בכפתור */}
-          <div 
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: '-100%',
-              width: '50%',
-              height: '100%',
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-              animation: 'shine 1.5s infinite'
-            }}
-          ></div>
-          <span style={{ fontSize: '18px', marginLeft: '-5px' }}>+</span> הוספת מודעה
-        </button>
       </div>
 
       {/* תצוגת מודעות */}
@@ -736,17 +545,19 @@ const NoticeBoard = () => {
                         }}>{getTypeIcon(notice.type || 'default')}</span>
                         {notice.title || 'כותרת חסרה'}
                       </h3>
-                      <span style={{ 
-                        fontSize: '12px',
-                        backgroundColor: 'white',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                        fontWeight: 'bold',
-                        color: '#475569'
-                      }}>
-                        {formatDate(notice.date)}
-                      </span>
+                      {formatDate(notice.date) && (
+                        <span style={{ 
+                          fontSize: '12px',
+                          backgroundColor: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                          fontWeight: 'bold',
+                          color: '#475569'
+                        }}>
+                          {formatDate(notice.date)}
+                        </span>
+                      )}
                     </div>
                   </div>
                   
@@ -809,60 +620,31 @@ const NoticeBoard = () => {
                         {expandedNotice === notice.id ? '▲' : '▼'}
                       </span>
                     </button>
-                    
-                    <div style={{ 
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      borderTop: '1px solid #e2e8f0',
-                      paddingTop: '12px',
-                      marginTop: '12px',
-                      fontSize: '13px',
-                      color: '#64748b'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{ 
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '50%',
-                          backgroundColor: '#f1f5f9',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginLeft: '8px',
-                          fontWeight: 'bold',
-                          color: '#475569'
-                        }}>
-                          {getAuthorInitial(notice)}
-                        </div>
-                        <span>{getAuthorName(notice)}</span>
-                      </div>
-                      
-                      {/* אינטראקציות */}
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        <button 
-                          style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '4px',
-                            background: 'none',
-                            border: 'none',
-                            padding: '4px',
-                            cursor: 'pointer',
-                            color: '#64748b',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = '#3b82f6';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '#64748b';
-                          }}
-                        >
-                          <span>💬</span>
-                          <span>תגובות</span>
-                        </button>
-                      </div>
-                    </div>
+                  </div>
+
+                  {/* כפתור מחיקה בתחתית שמאל */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    alignItems: 'center',
+                    marginTop: '12px',
+                  }}>
+                    <button
+                      onClick={() => handleOpenDeleteDialog(notice)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#ef4444',
+                        fontSize: '20px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                      title="מחק מודעה"
+                    >
+                      🗑️
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1524,7 +1306,6 @@ const NoticeBoard = () => {
                   )}
                 />
                 
-                {/* טיפ מועיל */}
                 {announcementType && (
                   <div style={{
                     padding: '12px',
@@ -1629,97 +1410,186 @@ const NoticeBoard = () => {
                 </div>
               </form>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
   
-        {/* סגנונות CSS לאנימציות */}
-        <style>
-          {`
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            
-            @keyframes bounceIn {
-              0% { transform: scale(0.8); opacity: 0; }
-              60% { transform: scale(1.05); }
-              80% { transform: scale(0.95); }
-              100% { transform: scale(1); opacity: 1; }
-            }
-            
-            @keyframes shine {
-              0% { left: -100%; }
-              20% { left: 100%; }
-              100% { left: 100%; }
-            }
-            
-            @keyframes pulseIn {
-              0% { transform: scale(0); opacity: 0; }
-              60% { transform: scale(1.1); }
-              100% { transform: scale(1); opacity: 1; }
-            }
-            
-            @keyframes rotateIn {
-              from { transform: rotate(-90deg); opacity: 0; }
-              to { transform: rotate(0); opacity: 1; }
-            }
-            
-            @keyframes float {
-              0%, 100% { transform: translate(0, 0); }
-              50% { transform: translate(15px, 15px); }
-            }
-          `}
-        </style>
+      {/* סגנונות CSS לאנימציות */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
           
+          @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            60% { transform: scale(1.05); }
+            80% { transform: scale(0.95); }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          
+          @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
+          }
+          
+          @keyframes pulseIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          
+          @keyframes rotateIn {
+            from { transform: rotate(-90deg); opacity: 0; }
+            to { transform: rotate(0); opacity: 1; }
+          }
+          
+          @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(15px, 15px); }
+          }
+        `}
+      </style>
+        
   
-        {/* כפתור צף להוספת מודעה */}
-        <button
-          onClick={() => setShowModal(true)}
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-            color: 'white',
-            fontSize: '30px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: 'none',
-            boxShadow: '0 4px 10px rgba(37, 99, 235, 0.3)',
-            cursor: 'pointer',
-            transition: 'transform 0.3s, box-shadow 0.3s',
-            animation: isInitialLoad ? 'bounce 1s ease 2s' : 'none',
-            zIndex: 50
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-5px) scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 6px 15px rgba(37, 99, 235, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0) scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 10px rgba(37, 99, 235, 0.3)';
-          }}
-        >
+      {/* כפתור צף להוספת מודעה */}
+      <button
+        onClick={() => setShowModal(true)}
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+          color: 'white',
+          fontSize: '30px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: 'none',
+          boxShadow: '0 4px 10px rgba(37, 99, 235, 0.3)',
+          cursor: 'pointer',
+          transition: 'transform 0.3s, box-shadow 0.3s',
+          animation: isInitialLoad ? 'bounce 1s ease 2s' : 'none',
+          zIndex: 50
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px) scale(1.05)';
+          e.currentTarget.style.boxShadow = '0 6px 15px rgba(37, 99, 235, 0.4)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 10px rgba(37, 99, 235, 0.3)';
+        }}
+      >
+        <div style={{
+          position: 'absolute',
+          top: '-5px',
+          left: '-5px',
+          right: '-5px',
+          bottom: '-5px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0) 70%)',
+          animation: 'pulse 2s infinite ease-in-out',
+          zIndex: -1
+        }}></div>
+        
+        <span style={{ marginTop: '-5px' }}>+</span>
+      </button>
+
+      {/* דיאלוג מחיקה */}
+      {deleteDialogOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.35)',
+          zIndex: 2000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
           <div style={{
-            position: 'absolute',
-            top: '-5px',
-            left: '-5px',
-            right: '-5px',
-            bottom: '-5px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0) 70%)',
-            animation: 'pulse 2s infinite ease-in-out',
-            zIndex: -1
-          }}></div>
-          
-          <span style={{ marginTop: '-5px' }}>+</span>
-        </button>
-      </div>
-    );
-  };
+            background: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            minWidth: 320,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 16,
+          }}>
+            <h3 style={{margin:0}}>אישור מחיקת מודעה</h3>
+            <div>האם אתה בטוח שברצונך למחוק את המודעה?</div>
+            <input
+              type="password"
+              placeholder="הכנס סיסמה"
+              value={deletePassword}
+              onChange={e => setDeletePassword(e.target.value)}
+              style={{
+                padding: '8px',
+                borderRadius: '6px',
+                border: '1px solid #ccc',
+                width: '100%'
+              }}
+            />
+            {deleteError && (
+              <div style={{
+                color: '#ef4444',
+                fontSize: '14px',
+                textAlign: 'center'
+              }}>
+                {deleteError}
+              </div>
+            )}
+            <div style={{
+              display: 'flex',
+              gap: 8,
+              marginTop: 8
+            }}>
+              <button 
+                onClick={() => {
+                  setDeleteDialogOpen(false);
+                  setDeletePassword('');
+                  setDeleteError(null);
+                }} 
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  cursor: 'pointer'
+                }}
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => handleDeleteNotice(noticeToDelete._id)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: '#ef4444',
+                  color: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                מחק
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
   
-  export default NoticeBoard;
+export default NoticeBoard;

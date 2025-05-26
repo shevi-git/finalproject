@@ -7,29 +7,37 @@ const AnnouncementRouter = require("./Router/AnnouncementRouter");
 const ChatMessageRouter = require("./Router/ChatMessageRouter");
 const UserRouter = require("./Router/UserRouter");
 const FamilyRouter = require("./Router/FamilyRouter"); // הראוטר של משפחות
-const cors =require('cors');
+const cors = require('cors');
 dotenv.config();
 
+// Middleware
 app.use(bodyParser.json());
-app.use(cors(
-));
+app.use(cors());
 
-const connectd = process.env.MONGO_URI;
+// Logging middleware
+app.use((req, res, next) => {
+    console.log('=== Incoming Request ===');
+    console.log('Method:', req.method);
+    console.log('URL:', req.originalUrl);
+    console.log('Headers:', req.headers);
+    next();
+});
 
-mongoose.connect(connectd)
+const connected = process.env.MONGO_URI;
+
+mongoose.connect(connected)
     .then(() => {
         console.log('Connected to MongoDB');
     })
     .catch(err => {
         console.error('MongoDB connection error:', err);
     });
-    app.use(cors());
+
 // הגדרת הנתיבים
 app.use("/Family", FamilyRouter); // כאן אנחנו מגדירים את הראוטר של משפחות
 app.use("/Announcement", AnnouncementRouter);
 app.use("/ChatMessage", ChatMessageRouter);
 app.use("/user", UserRouter);
-
 
 const PORT = process.env.APP_PORT || 8000;
 app.listen(PORT, () => {

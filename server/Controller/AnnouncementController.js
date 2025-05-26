@@ -1,4 +1,6 @@
 const Announcement = require("../Moduls/AnnouncementSchema");
+const Users = require("../Moduls/UserSchema");
+const bcrypt = require("bcrypt");
 
 async function createAnnouncement(req, res) {
     try {
@@ -39,6 +41,11 @@ async function createAnnouncement(req, res) {
 async function deleteAnnouncement(req, res) {
     try {
         const { id } = req.params; // מזהה המודעה שצריך למחוק
+        const { password } = req.body; // הסיסמה שהמשתמש הזין
+
+        if (!password) {
+            return res.status(400).json({ message: "Password is required for deletion" });
+        }
 
         // מחפשים את המודעה במסד הנתונים
         const announcement = await Announcement.findById(id);
@@ -46,8 +53,20 @@ async function deleteAnnouncement(req, res) {
             return res.status(404).json({ message: "Announcement not found" });
         }
 
-        // בודקים אם המשתמש שמבצע את הפעולה הוא אותו משתמש שיצר את המודעה
-        if (announcement.createBy.toString() !== req.user.id) {
+        // מציאת המשתמש במסד הנתונים
+        const user = await Users.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // בדיקת הסיסמה
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "Invalid password" });
+        }
+
+        // בודקים אם המשתמש הוא ועד בית או היוצר של המודעה
+        if (req.user.role !== "houseCommittee" && announcement.createBy.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: "You do not have permission to delete this announcement" });
         }
 
@@ -57,6 +76,7 @@ async function deleteAnnouncement(req, res) {
         return res.status(200).json({ message: "Announcement deleted successfully" });
 
     } catch (error) {
+        console.error("Error in deleteAnnouncement:", error);
         return res.status(500).json({ message: "Error deleting announcement", error });
     }
 }

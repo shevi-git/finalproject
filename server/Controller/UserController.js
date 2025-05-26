@@ -7,8 +7,8 @@ const register = async (req, res) => {
     try {
         console.log("Request body:", req.body);
 
-        const { name, email, password } = req.body;
-        if (!name || !email || !password) {
+        const { nameFamily, email, password, role } = req.body;
+        if (!nameFamily || !email || !password) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
@@ -22,20 +22,30 @@ const register = async (req, res) => {
         }
 
         const hashedPwd = await bcrypt.hash(password, 10);
-        const userObject = { name, email, password: hashedPwd };
+        const userObject = { 
+            nameFamily, 
+            email, 
+            password: hashedPwd,
+            role: role || 'resident' // אם לא צוין תפקיד, ברירת המחדל היא תושב
+        };
 
         const user = await Users.create(userObject);
         if (user) {
             // יצירת טוקן JWT
             const accessToken = jwt.sign(
-                { name: user.name, email: user.email },
+                { 
+                    _id: user._id,
+                    nameFamily: user.nameFamily, 
+                    email: user.email,
+                    role: user.role // הוספת התפקיד לטוקן
+                },
                 process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: '1h' } // הגדרת זמן תפוגה של הטוקן
+                { expiresIn: '1h' }
             );
 
             return res.status(201).json({
-                message: `New user ${user.name} created`,
-                accessToken: accessToken, // מחזירים את הטוקן ללקוח
+                message: `New user ${user.nameFamily} created`,
+                accessToken: accessToken,
             });
         } else {
             return res.status(400).json({ message: 'Invalid user received' });
@@ -66,9 +76,14 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Incorrect password' });
         }
 
-        // יצירת טוקן JWT שמכיל את תפקיד המשתמש
+        // יצירת טוקן JWT שמכיל את מזהה המשתמש ותפקידו
         const accessToken = jwt.sign(
-            { nameFamily: foundUser.nameFamily, email: foundUser.email },
+            { 
+                _id: foundUser._id,
+                nameFamily: foundUser.nameFamily,
+                email: foundUser.email,
+                role: foundUser.role // הוספת התפקיד לטוקן
+            },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: '1h' }
         );
@@ -76,7 +91,7 @@ const login = async (req, res) => {
         // מחזירים את הטוקן בתגובה
         res.json({
             message: 'Logged In',
-            accessToken: accessToken // ודא שהשם הוא accessToken
+            accessToken: accessToken
         });
 
     } catch (error) {
@@ -155,4 +170,63 @@ const getAllUsers=async(req,res)=>{
         res.status(500).json({ message: "Server error" });
     }
 }
-module.exports = { register, login,updateUser,deleteUser,getUser,getAllUsers };
+
+const checkEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
+
+        const existingUser = await Users.findOne({ email }).lean();
+        res.json({ exists: !!existingUser });
+    } catch (error) {
+        console.error("Error in checkEmail function:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+const updateUserRole = async (req, res) => {
+    try {
+        const { email, role } = req.body;
+        if (!email || !role) {
+            return res.status(400).json({ message: 'Email and role are required' });
+        }
+
+        if (role !== 'resident' && role !== 'houseCommittee') {
+            return res.status(400).json({ message: 'Invalid role' });
+        }
+
+        const user = await Users.findOneAndUpdate(
+            { email },
+            { role },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // יצירת טוקן חדש עם התפקיד המעודכן
+        const accessToken = jwt.sign(
+            { 
+                _id: user._id,
+                nameFamily: user.nameFamily,
+                email: user.email,
+                role: user.role
+            },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.json({
+            message: 'Role updated successfully',
+            accessToken: accessToken
+        });
+    } catch (error) {
+        console.error("Error in updateUserRole function:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+module.exports = { register, login, updateUser, deleteUser, getUser, getAllUsers, checkEmail, updateUserRole };

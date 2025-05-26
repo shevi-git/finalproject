@@ -46,5 +46,47 @@ const updateChatMessage = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+const deleteChatMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
 
-module.exports = { createChatMessage,updateChatMessage };
+        // בדיקה אם ההודעה קיימת        
+        const message = await ChatMessage.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ message: "Message not found" });
+        }   
+
+        // בדיקה אם המשתמש המחובר הוא השולח
+        if (message.sender.toString() !== req.user._id) {
+            return res.status(403).json({ message: "You are not allowed to delete this message" });
+        }       
+
+        // מחיקת ההודעה
+        await ChatMessage.findByIdAndDelete(messageId);
+
+        res.json({ message: "Message deleted successfully" });
+    } catch (error) {
+        console.error("Error in deleteChatMessage:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+const getAllMessages = async (req, res) => {
+    try {
+        const { familyId } = req.params;
+
+        // שליפת כל ההודעות של המשפחה
+        const messages = await ChatMessage.find({ familyId })
+            .populate('sender', 'firstName lastName') // שליפת פרטי השולח
+            .sort({ createdAt: -1 }); // מיון לפי תאריך יצירה - החדש ביותר קודם
+
+        res.json(messages);
+    } catch (error) {
+        console.error("Error in getAllMessages:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+
+
+
+module.exports = { createChatMessage,updateChatMessage,deleteChatMessage,getAllMessages };
