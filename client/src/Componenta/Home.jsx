@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTheme, useMediaQuery } from '@mui/material';
-import { Box, Backdrop, CircularProgress, Divider, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText, Alert, Snackbar, TextField } from '@mui/material';
+import { Box, Backdrop, CircularProgress, Divider, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText, Alert, Snackbar, TextField, Fab } from '@mui/material';
 import axios from 'axios';
 import { addFamily } from '../redux/familySlice';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +18,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircleOutline, ErrorOutline } from '@mui/icons-material';
 import { logout } from '../Store/UserSlice';
+import { Chat as ChatIcon, Close } from '@mui/icons-material';
+import Chat from './Chat'; // ייבוא קומפוננטת הצ'אט
 
 // הוספת interceptor לכל הבקשות
 axios.interceptors.request.use(
@@ -35,6 +37,7 @@ axios.interceptors.request.use(
 
 // קומפוננטת דף הבית בסגנון החדש
 const Home = () => {
+  const [chatOpen, setChatOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [loading, setLoading] = useState(true);
@@ -288,7 +291,7 @@ const Home = () => {
             <CheckCircleOutline sx={{ fontSize: '1.5rem' }} />
             המשפחה נמחקה בהצלחה
           </Typography>
-        </Box>
+      </Box>
       );
       setAlertSeverity('success');
       setAlertOpen(true);
@@ -1024,8 +1027,58 @@ const Home = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* כפתור צף של צ'אט */}
+      <Fab
+        color="primary"
+        aria-label="chat"
+        onClick={() => setChatOpen(true)}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
+        }}
+      >
+        <ChatIcon />
+      </Fab>
+
+      {/* דיאלוג של הצ'אט */}
+      <Dialog
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '15px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontWeight: 'bold',
+            fontSize: '1.5rem',
+            background: 'rgba(0, 0, 0, 0.05)',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          צ'אט
+          <IconButton onClick={() => setChatOpen(false)}>
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Chat />
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };
 
 export default Home;
+

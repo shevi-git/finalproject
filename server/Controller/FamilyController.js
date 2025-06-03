@@ -16,7 +16,7 @@ const createFamily = async (req, res) => {
             });
         }
 
-        const { nameFamily, floor, electricity, water, amountChildren, role } = req.body;
+        const { nameFamily, floor, amountChildren, role } = req.body;
         
         // בדיקת שדות חובה
         if (!nameFamily || !floor) {
@@ -35,24 +35,9 @@ const createFamily = async (req, res) => {
             });
         }
 
-        // בדיקת תקינות השדות המספריים
-        const electricityNum = electricity ? Number(electricity) : 0;
-        const waterNum = water ? Number(water) : 0;
         const amountChildrenNum = amountChildren ? Number(amountChildren) : 0;
 
-        if (isNaN(electricityNum) || electricityNum < 0) {
-            console.log('Invalid electricity value:', electricity);
-            return res.status(400).json({ 
-                message: "ערך חשמל לא תקין" 
-            });
-        }
 
-        if (isNaN(waterNum) || waterNum < 0) {
-            console.log('Invalid water value:', water);
-            return res.status(400).json({ 
-                message: "ערך מים לא תקין" 
-            });
-        }
 
         if (isNaN(amountChildrenNum) || amountChildrenNum < 0) {
             console.log('Invalid amountChildren value:', amountChildren);
@@ -74,8 +59,6 @@ const createFamily = async (req, res) => {
         const familyData = {
             nameFamily: nameFamily.trim(),
             floor: floorNum,
-            electricity: electricityNum,
-            water: waterNum,
             amountChildren: amountChildrenNum,
             role: validRole,
             userId: req.user._id // שימוש במזהה המשתמש מהטוקן
@@ -123,7 +106,8 @@ const createFamily = async (req, res) => {
 
 const updateFamily = async (req, res) => {
     const { id } = req.params;
-    const { nameFamily, floor, electricity, water, amountChildren, role, password } = req.body;
+    const { nameFamily, floor, amountChildren, role, password } = req.body;
+    console.log('Updating family:', id);
 
     if (!password) {
         return res.status(400).json({ message: "נדרשת סיסמה לעדכון" });
@@ -135,19 +119,7 @@ const updateFamily = async (req, res) => {
             return res.status(404).json({ message: "משפחה לא נמצאה" });
         }
 
-        // בדיקה שהמשתמש הוא הבעלים או ועד בית
-        console.log('User role:', req.user.role);
-        console.log('Family userId:', family.userId);
-        console.log('Current user id:', req.user._id);
-        const isOwner = family.userId.toString() === req.user._id.toString();
-        const isHouseCommittee = req.user.role === "houseCommittee" || req.user.role === "ועד בית";
-        console.log('Is owner:', isOwner);
-        console.log('Is house committee:', isHouseCommittee);
-        if (!isHouseCommittee && !isOwner) {
-            return res.status(403).json({ message: "אין לך הרשאה לעדכן משפחה זו" });
-        }
-
-        // מציאת המשתמש במסד הנתונים
+        // מציאת המשתמש
         const user = await Users.findById(req.user._id);
         if (!user) {
             return res.status(404).json({ message: "משתמש לא נמצא" });
@@ -159,24 +131,33 @@ const updateFamily = async (req, res) => {
             return res.status(401).json({ message: "סיסמה שגויה" });
         }
 
-        // עדכון המשפחה
-        family.nameFamily = nameFamily || family.nameFamily;
-        family.floor = floor || family.floor;
-        family.electricity = electricity || family.electricity;
-        family.water = water || family.water;
-        family.amountChildren = amountChildren || family.amountChildren;
-        family.role = role || family.role;
+        // בדיקת הרשאות
+        const isOwner = family.userId.toString() === req.user._id.toString();
+        const isHouseCommittee = req.user.role === "ועד בית" || family.role === "ועד בית";
+
+        if (!isHouseCommittee && !isOwner) {
+            return res.status(403).json({ message: "רק בעל המשפחה או ועד בית יכולים לעדכן את הפרטים" });
+        }
+
+        // עדכון הפרטים
+        if (nameFamily !== undefined) family.nameFamily = nameFamily;
+        if (floor !== undefined) family.floor = floor;
+        if (amountChildren !== undefined) family.amountChildren = amountChildren;
+        if (role !== undefined) family.role = role;
 
         await family.save();
-        res.status(200).json(family);
+        console.log('Family updated successfully');
+
+        res.status(200).json({ message: "המשפחה עודכנה בהצלחה", family });
+
     } catch (error) {
         console.error("Error updating family:", error);
-        res.status(500).json({ message: "שגיאת שרת" });
+        res.status(500).json({ message: "שגיאת שרת", error: error.message });
     }
 };
 
 const getAllFamilies = async (req, res) => {
-    console.log('=== Starting getAllFamilies ===');
+   console.log('=== Starting getAllFamilies ===');
     console.log('Request user:', req.user);
     console.log('Request headers:', req.headers);
     
@@ -193,7 +174,7 @@ const getAllFamilies = async (req, res) => {
         console.error("Error stack:", error.stack);
         res.status(500).json({ message: "Server error" });
     }
-};
+}; 
 const getFamilyById = async (req, res) => {
     try {
         const family = await Family.findById(req.params.id);
@@ -247,5 +228,88 @@ const deleteFamily = async (req, res) => {
     }
 };
 
-module.exports = { createFamily, updateFamily, getAllFamilies, getFamilyById, deleteFamily };
+const verifyPassword = async (req, res) => {
+    try {
+        const { familyId, password } = req.body;
+        console.log('Verifying password for family:', familyId);
+
+        if (!password) {
+            return res.status(400).json({ message: "נדרשת סיסמה לאימות" });
+        }
+
+        // מציאת המשפחה
+        const family = await Family.findById(familyId);
+        if (!family) {
+            return res.status(404).json({ message: "משפחה לא נמצאה" });
+        }
+
+        // מציאת המשתמש
+        const user = await Users.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: "משתמש לא נמצא" });
+        }
+
+        // בדיקת הסיסמה
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "סיסמה שגויה" });
+        }
+
+        // בדיקת הרשאות
+        const isOwner = family.userId.toString() === req.user._id.toString();
+        const isHouseCommittee = req.user.role === "ועד בית" || family.role === "ועד בית";
+
+        if (!isHouseCommittee && !isOwner) {
+            return res.status(403).json({ message: "רק בעל המשפחה או ועד בית יכולים לעדכן את הפרטים" });
+        }
+
+        return res.status(200).json({ success: true, message: "הסיסמה אומתה בהצלחה" });
+
+    } catch (error) {
+        console.error("Error in verifyPassword:", error);
+        return res.status(500).json({ message: "שגיאה באימות הסיסמה", error: error.message });
+    }
+};
+
+const updateAnnouncement = async (req, res) => {
+    try {
+        const { familyId, announcement } = req.body;
+        console.log('Updating announcement for family:', familyId);
+
+        // מציאת המשפחה
+        const family = await Family.findById(familyId);
+        if (!family) {
+            return res.status(404).json({ message: "משפחה לא נמצאה" });
+        }
+
+        // בדיקת הרשאות
+        const isOwner = family.userId.toString() === req.user._id.toString();
+        const isHouseCommittee = req.user.role === "ועד בית" || family.role === "ועד בית";
+
+        if (!isHouseCommittee && !isOwner) {
+            return res.status(403).json({ message: "רק בעל המשפחה או ועד בית יכולים לעדכן את המודעה" });
+        }
+
+        // עדכון המודעה
+        family.announcement = announcement;
+        await family.save();
+        console.log('Announcement updated successfully');
+
+        res.status(200).json({ success: true, message: "המודעה עודכנה בהצלחה", family });
+
+    } catch (error) {
+        console.error("Error updating announcement:", error);
+        res.status(500).json({ message: "שגיאה בעדכון המודעה", error: error.message });
+    }
+};
+
+module.exports = { 
+    createFamily, 
+    updateFamily, 
+    getAllFamilies, 
+    getFamilyById, 
+    deleteFamily, 
+    verifyPassword,
+    updateAnnouncement 
+};
 

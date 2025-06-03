@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Home from './Componenta/Home';
 import User from './Componenta/User';
@@ -12,11 +12,17 @@ import {
   Box, 
   AppBar, 
   Toolbar, 
-  Typography, 
   Button, 
   Tooltip, 
   Avatar, 
   Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
   useTheme,
   useMediaQuery,
   styled
@@ -27,8 +33,7 @@ import {
   Person, 
   Notifications, 
   Menu as MenuIcon,
-  ArrowBack,
-  ArrowForward
+  WbSunny
 } from '@mui/icons-material';
 
 // Animated Link Button component
@@ -68,8 +73,8 @@ const NavParticles = () => {
           key={i}
           style={{
             position: 'absolute',
-            width: Math.random() * 6 + 2,
-            height: Math.random() * 6 + 2,
+            width: '2px',
+            height: '2px',
             borderRadius: '50%',
             backgroundColor: `rgba(255, 255, 255, ${Math.random() * 0.2 + 0.05})`,
             left: `${Math.random() * 100}%`,
@@ -112,42 +117,43 @@ function AppRoutes() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [activeLink, setActiveLink] = useState(location.pathname);
-  const [navVisible, setNavVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [weatherDialogOpen, setWeatherDialogOpen] = useState(false);
+  const [weatherData, setWeatherData] = useState([]);
+  const cities = ['Jerusalem', 'Bnei Brak', 'Haifa', 'Modi\'in Illit'];
 
-  // Handle scroll effect for navbar
+  // Fetch weather data when the dialog is open
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 80) {
-        setNavVisible(false);
-      } else {
-        setNavVisible(true);
+    if (!weatherDialogOpen) return;
+
+    async function fetchWeather(city) {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/weather?city=${encodeURIComponent(city)}`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return {
+          city: data.name,
+          temp: data.main.temp,
+          condition: data.weather[0].description,
+        };
+      } catch (error) {
+        console.error(`Weather fetch failed for ${city}`, error);
+        return null;
       }
-      setLastScrollY(currentScrollY);
-    };
+    }
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+    async function fetchAllWeather() {
+      const results = await Promise.all(cities.map(fetchWeather));
+      setWeatherData(results.filter((r) => r !== null));
+    }
 
-  // Update active link when location changes
-  useEffect(() => {
-    setActiveLink(location.pathname);
-  }, [location]);
+    fetchAllWeather();
+  }, [weatherDialogOpen]);
 
-  // Animation variants for nav bar
-  const navVariants = {
-    visible: { y: 0, opacity: 1 },
-    hidden: { y: -60, opacity: 0 }
-  };
-
-  // Check if component loaded correctly
-  useEffect(() => {
-    console.log("AppRoutes loaded. Current location:", location.pathname);
-  }, [location.pathname]);
-
-  // Navigation items, kept consistent between mobile and desktop
+  // Navigation items
   const navItems = [
     { path: "/", label: "דף הבית", icon: <HomeIcon fontSize={isMobile ? "default" : "small"} /> },
     { path: "/login", label: "התחברות והרשמה", icon: <Person fontSize={isMobile ? "default" : "small"} /> },
@@ -158,9 +164,7 @@ function AppRoutes() {
     <>
       <motion.div
         initial="visible"
-        animate={navVisible ? "visible" : "hidden"}
-        variants={navVariants}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        animate="visible"
         style={{
           position: 'fixed',
           width: '100%',
@@ -205,93 +209,157 @@ function AppRoutes() {
                 direction: 'rtl' // RTL support
               }}
             >
-              {isMobile ? (
-                // Mobile view
-                <>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <motion.div whileTap={{ scale: 0.95 }}>
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: 'primary.main',
-                          boxShadow: '0 2px 10px rgba(33, 150, 243, 0.3)'
+              <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', gap: 2 }}>
+                {navItems.map((item) => (
+                  <Link 
+                    key={item.path} 
+                    to={item.path} 
+                    style={{ textDecoration: 'none' }}
+                    onClick={() => setActiveLink(item.path)}
+                  >
+                    <AnimatedNavLink
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Button
+                        color="inherit"
+                        startIcon={item.icon}
+                        sx={{
+                          color: 'white',
+                          fontWeight: activeLink === item.path ? 'bold' : 'normal',
+                          fontSize: '1rem',
+                          textTransform: 'none',
                         }}
                       >
-                        <MenuIcon />
-                      </Avatar>
-                    </motion.div>
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    {navItems.map((item) => (
-                      <Tooltip key={item.path} title={item.label} arrow>
-                        <Link to={item.path} style={{ textDecoration: 'none' }}>
-                          <motion.div
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Avatar 
-                              sx={{ 
-                                bgcolor: activeLink === item.path ? 'primary.main' : 'rgba(255,255,255,0.1)',
-                                transition: 'all 0.3s ease',
-                                transform: activeLink === item.path ? 'scale(1.1)' : 'scale(1)',
-                                boxShadow: activeLink === item.path ? '0 2px 10px rgba(33, 150, 243, 0.3)' : 'none'
-                              }}
-                            >
-                              {item.icon}
-                            </Avatar>
-                          </motion.div>
-                        </Link>
-                      </Tooltip>
-                    ))}
-                  </Box>
-                </>
-              ) : (
-                // Desktop view
-                <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', gap: 2 }}>
-                  {navItems.map((item) => (
-                    <Link 
-                      key={item.path} 
-                      to={item.path} 
-                      style={{ textDecoration: 'none' }}
-                      onClick={() => setActiveLink(item.path)}
-                    >
-                      <AnimatedNavLink
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Button
-                          color="inherit"
-                          startIcon={item.icon}
-                          sx={{
-                            color: 'white',
-                            fontWeight: activeLink === item.path ? 'bold' : 'normal',
-                            fontSize: '1rem',
-                            textTransform: 'none',
-                            position: 'relative',
-                            '&::after': {
-                              content: '""',
-                              position: 'absolute',
-                              bottom: 0,
-                              left: activeLink === item.path ? '0%' : '50%',
-                              right: activeLink === item.path ? '0%' : '50%',
-                              height: '2px',
-                              background: 'linear-gradient(90deg, #2196f3, #21CBF3)',
-                              borderRadius: '2px',
-                              transition: 'all 0.3s ease',
-                              display: activeLink === item.path ? 'block' : 'none',
-                            }
-                          }}
-                        >
-                          {item.label}
-                        </Button>
-                      </AnimatedNavLink>
-                    </Link>
-                  ))}
-                </Box>
-              )}
+                        {item.label}
+                      </Button>
+                    </AnimatedNavLink>
+                  </Link>
+                ))}
+                {/* Weather Button */}
+                <Tooltip title="תחזית מזג האוויר">
+                  <Button 
+                    color="inherit" 
+                    onClick={() => setWeatherDialogOpen(true)} 
+                    startIcon={<WbSunny />} 
+                  />
+                </Tooltip>
+              </Box>
             </Container>
           </Toolbar>
         </AppBar>
       </motion.div>
+
+      {/* Weather Dialog */}
+      <Dialog
+        open={weatherDialogOpen}
+        onClose={() => setWeatherDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '15px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+            background: 'linear-gradient(135deg, #2196f3, #21CBF3)',
+            color: 'white',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            textAlign: 'center',
+            fontWeight: 'bold',
+            fontSize: '1.5rem',
+            background: 'rgba(0, 0, 0, 0.1)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+          }}
+        >
+          תחזית מזג האוויר
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 2,
+            padding: '20px',
+          }}
+        >
+          {weatherData.length === 0 ? (
+            <Typography
+              variant="body1"
+              sx={{
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                textAlign: 'center',
+              }}
+            >
+              טוען נתוני מזג אוויר...
+            </Typography>
+          ) : (
+            <List
+              sx={{
+                width: '100%',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '10px',
+                padding: '10px',
+              }}
+            >
+              {weatherData.map(({ city, temp, condition }) => (
+                <ListItem
+                  key={city}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '10px',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                    '&:last-child': {
+                      borderBottom: 'none',
+                    },
+                  }}
+                >
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontWeight: 'bold',
+                      fontSize: '1.2rem',
+                    }}
+                  >
+                    {city}
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-end',
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: '1rem',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {temp}°C
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: '0.9rem',
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      {condition}
+                    </Typography>
+                  </Box>
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Page transitions */}
       <Container maxWidth="lg" sx={{ mt: '70px', pt: 2, pb: 6 }}>
@@ -304,61 +372,6 @@ function AppRoutes() {
           </Routes>
         </AnimatePresence>
       </Container>
-
-      {/* Page navigation indicators for mobile */}
-      {isMobile && (
-        <Box 
-          sx={{ 
-            position: 'fixed', 
-            bottom: 16, 
-            left: '50%', 
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            gap: 1,
-            zIndex: 900
-          }}
-        >
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Button
-              variant="contained"
-              sx={{
-                minWidth: 'auto',
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
-                background: 'linear-gradient(135deg, #2196f3, #21CBF3)',
-              }}
-              onClick={() => window.history.back()}
-            >
-              <ArrowBack />
-            </Button>
-          </motion.div>
-          
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Button
-              variant="contained"
-              sx={{
-                minWidth: 'auto',
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
-                background: 'linear-gradient(135deg, #2196f3, #21CBF3)',
-              }}
-              onClick={() => window.history.forward()}
-            >
-              <ArrowForward />
-            </Button>
-          </motion.div>
-        </Box>
-      )}
     </>
   );
 }

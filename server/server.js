@@ -9,10 +9,13 @@ const UserRouter = require("./Router/UserRouter");
 const FamilyRouter = require("./Router/FamilyRouter"); // הראוטר של משפחות
 const cors = require('cors');
 dotenv.config();
+const weatherRouter = require('./Controller/weatherController');
 
 // Middleware
-app.use(bodyParser.json());
 app.use(cors());
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -37,7 +40,9 @@ mongoose.connect(connected)
 app.use("/Family", FamilyRouter); // כאן אנחנו מגדירים את הראוטר של משפחות
 app.use("/Announcement", AnnouncementRouter);
 app.use("/ChatMessage", ChatMessageRouter);
-app.use("/user", UserRouter);
+app.use("/User", UserRouter);
+app.use('/api', weatherRouter);
+
 
 const PORT = process.env.APP_PORT || 8000;
 app.listen(PORT, () => {

@@ -12,16 +12,6 @@ const FamilySchema = new mongoose.Schema({
         min: [0, 'מספר הקומה חייב להיות 0 או יותר'],
         max: [6, 'מספר הקומה לא יכול להיות גדול מ-6']
     },
-    electricity: {
-        type: Number,
-        default: 0,
-        min: [0, 'ערך החשמל חייב להיות 0 או יותר']
-    },
-    water: {
-        type: Number,
-        default: 0,
-        min: [0, 'ערך המים חייב להיות 0 או יותר']
-    },
     amountChildren: {
         type: Number,
         default: 0,
@@ -37,6 +27,10 @@ const FamilySchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: [true, 'מזהה המשתמש הוא שדה חובה']
+    },
+    announcement: {
+        type: String,
+        default: ''
     }
 }, {
     timestamps: true

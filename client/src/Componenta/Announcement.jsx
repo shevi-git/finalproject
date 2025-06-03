@@ -220,7 +220,7 @@ const Announcement = () => {
         }
 
         try {
-            const response = await axios.put(`http://localhost:8000/api/Announcement/updateAnnouncement/${announcementId}`, {
+            const response = await axios.put(`http://localhost:8000/Announcement/updateAnnouncement/${announcementId}`, {
                 title: editedTitle,
                 content: editedContent,
                 type: isMessageType ? "הודעות כלליות" : "הודעות שמחה",
@@ -262,17 +262,43 @@ const Announcement = () => {
     };
 
     const saveAnnouncement = async () => {
-        const token = localStorage.getItem('token');
-        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        const token = localStorage.getItem('authToken');
+        console.log("Token from localStorage:", token); // בדוק אם הטוקן נשלף
+    
+        if (!token) {
+            console.log("No token found in localStorage");
+            setSnackbarMessage("נדרשת התחברות מחדש למערכת");
+            setSnackbarOpen(true);
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+            return;
+        }
+    
+        let decodedToken;
+        try {
+            decodedToken = JSON.parse(atob(token.split('.')[1]));
+            console.log("Decoded token:", decodedToken);
+        } catch (error) {
+            console.error("שגיאה בפענוח הטוקן:", error);
+            setSnackbarMessage("נדרשת התחברות מחדש למערכת");
+            setSnackbarOpen(true);
+            localStorage.removeItem('token');
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+            return;
+        }
+    
         const userId = decodedToken.userId;
         let announcementData;
-        
+    
         if (isMessageType) {
             // נתונים למודעת הודעה
             announcementData = {
                 title: "לשכנים היקרים",
                 content: message,
-                type:"הודעות כלליות",
+                type: "הודעות כלליות",
                 createBy: userId,
                 createDate: new Date().toISOString()
             };
@@ -281,23 +307,21 @@ const Announcement = () => {
             announcementData = {
                 title: `למשפחת ${nameFamily} היקרה!`,
                 content: content,
-                type:"הודעות שמחה",
+                type: "הודעות שמחה",
                 createBy: userId,
                 createDate: new Date().toISOString()
             };
         }
-       
+    
         try {
             console.log("שולח נתונים לשרת:", JSON.stringify(announcementData, null, 2));
-            const response = await axios.post(`http://localhost:8000/api/Announcement/createAnnouncement`, announcementData);
+            const response = await axios.post(`http://localhost:8000/Announcement/createAnnouncement`, announcementData);
             console.log("תשובה מהשרת:", JSON.stringify(response.data, null, 2));
-            
+    
             if (response.status === 200 || response.status === 201) {
                 console.log(`השמירה בוצעה בהצלחה!`);
-                // שמירת ה-ID של המודעה
                 const newAnnouncementId = response.data.newAnnouncement._id;
                 setShowActionButtons(true);
-                // עדכון ה-URL עם ה-ID החדש
                 navigate(location.pathname, {
                     state: {
                         ...location.state,
@@ -306,18 +330,17 @@ const Announcement = () => {
                     },
                     replace: true
                 });
-
-                // קבלת כל המודעות אחרי השמירה
+    
                 try {
-                    const allAnnouncements = await axios.get(`http://localhost:8000/api/Announcement/getAnnouncements`);
+                    const allAnnouncements = await axios.get(`http://localhost:8000/Announcement/getAnnouncements`);
                     console.log("כל המודעות במערכת:", JSON.stringify(allAnnouncements.data, null, 2));
                 } catch (error) {
                     console.error("שגיאה בקבלת המודעות:", error.response?.data || error.message);
                 }
-            }        
-        }
-        catch(error) {
+            }
+        } catch (error) {
             console.error("שגיאה בחיבור לשרת:", error.response?.data || error.message);
+            setSnackbarMessage("שגיאה בשמירת המודעה");
             setSnackbarOpen(true);
         }
     };

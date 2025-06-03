@@ -5,44 +5,13 @@ import axios from 'axios';
 const FamilyManager = ({ family }) => {
   const [showForm, setShowForm] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [updatedFamily, setUpdatedFamily] = useState({ ...family });
-  const [announcement, setAnnouncement] = useState('');
 
   const Updatefamily = () => {
     setShowPasswordModal(true);
     setError('');
-  };
-
-  const UpdateAnnouncement = () => {
-    setShowAnnouncementModal(true);
-    setError('');
-  };
-
-  const handleAnnouncementSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:8000/Family/updateAnnouncement', {
-        familyId: family._id,
-        announcement: announcement
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (response.data.success) {
-        setShowAnnouncementModal(false);
-        setAnnouncement('');
-        alert('המודעה עודכנה בהצלחה');
-        window.location.reload();
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'שגיאה בעדכון המודעה');
-    }
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -109,46 +78,8 @@ const FamilyManager = ({ family }) => {
   };
 
   return (
-    <div className="relative space-x-2 space-x-reverse">
-      <Button onClick={Updatefamily} className="ml-2">עדכון משפחה</Button>
-      <Button onClick={UpdateAnnouncement} variant="secondary">עדכון מודעה</Button>
-
-      {showAnnouncementModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4 text-center">עדכון מודעה</h3>
-            <form onSubmit={handleAnnouncementSubmit} className="space-y-4">
-              <textarea
-                value={announcement}
-                onChange={(e) => setAnnouncement(e.target.value)}
-                placeholder="הכנס את תוכן המודעה כאן..."
-                className="w-full p-2 border rounded text-right h-32 resize-none"
-                dir="rtl"
-              />
-              {error && <p className="text-red-500 text-center">{error}</p>}
-              <div className="flex justify-center space-x-2 space-x-reverse">
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  שמור
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAnnouncementModal(false);
-                    setAnnouncement('');
-                    setError('');
-                  }}
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                >
-                  ביטול
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+    <div className="relative">
+      <Button onClick={Updatefamily}>עדכון משפחה</Button>
 
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

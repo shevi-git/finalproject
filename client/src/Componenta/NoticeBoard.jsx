@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useForm, Controller } from 'react-hook-form';
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 
 // קומפוננטת לוח מודעות עם אנימציות CSS משופרות ואנימציית טעינה
 const NoticeBoard = () => {
@@ -1629,3 +1630,4 @@ const NoticeBoard = () => {
 };
   
 export default NoticeBoard;
+
