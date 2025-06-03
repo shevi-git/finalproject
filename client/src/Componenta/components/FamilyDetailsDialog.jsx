@@ -70,28 +70,6 @@ export const FamilyDetailsDialog = ({ open, onClose, family }) => {
               </Box>
             </Grid>
           )}
-
-          {family.electricity && (
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <ElectricBoltIcon color="primary" />
-                <Typography variant="body1">
-                  חשמל: {family.electricity}
-                </Typography>
-              </Box>
-            </Grid>
-          )}
-
-          {family.water && (
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <WaterDropIcon color="primary" />
-                <Typography variant="body1">
-                  מים: {family.water}
-                </Typography>
-              </Box>
-            </Grid>
-          )}
         </Grid>
 
         <Box sx={{ mt: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>

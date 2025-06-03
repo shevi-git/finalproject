@@ -89,30 +89,6 @@ export const AddFamilyDialog = ({ open, onClose, newFamily, onChange, onSubmit, 
           />
           <TextField
             fullWidth
-            label="חשמל"
-            name="electricity"
-            type="number"
-            value={newFamily.electricity}
-            onChange={handleChange}
-            margin="normal"
-            error={!!errors.electricity}
-            helperText={errors.electricity}
-            inputProps={{ min: 0 }}
-          />
-          <TextField
-            fullWidth
-            label="מים"
-            name="water"
-            type="number"
-            value={newFamily.water}
-            onChange={handleChange}
-            margin="normal"
-            error={!!errors.water}
-            helperText={errors.water}
-            inputProps={{ min: 0 }}
-          />
-          <TextField
-            fullWidth
             label="מספר ילדים"
             name="amountChildren"
             type="number"

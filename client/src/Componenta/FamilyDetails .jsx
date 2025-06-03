@@ -30,8 +30,6 @@ const FamilyDetails = () => {
     <div>
       <h2>פרטי משפחה: {family.nameFamily}</h2>
       <p>קומה: {family.floor}</p>
-      <p>צריכת חשמל: {family.electricity}</p>
-      <p>צריכת מים: {family.water}</p>
       <p>מספר ילדים: {family.amountChildren}</p>
       <p>תפקיד: {family.role}</p>
     </div>

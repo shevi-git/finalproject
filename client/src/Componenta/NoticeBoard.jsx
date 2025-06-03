@@ -345,12 +345,15 @@ const NoticeBoard = () => {
         setDeleteDialogOpen(false);
         setDeletePassword('');
         setDeleteError(null);
+  
+        alert('המודעה נמחקה בהצלחה'); 
       }
     } catch (error) {
       setDeleteError(error.response?.data?.message || 'שגיאה במחיקת המודעה');
     }
   };
-
+  
+  
   // פותח דיאלוג מחיקה
   const handleOpenDeleteDialog = (notice) => {
     setNoticeToDelete(notice);
@@ -622,13 +625,46 @@ const NoticeBoard = () => {
                     </button>
                   </div>
 
-                  {/* כפתור מחיקה בתחתית שמאל */}
+                  {/* כפתורי פעולה בתחתית */}
                   <div style={{
                     display: 'flex',
                     justifyContent: 'flex-start',
                     alignItems: 'center',
                     marginTop: '12px',
+                    gap: '8px'
                   }}>
+                    <button
+                      onClick={() => {
+                        navigate('/Announcement', {
+                          state: {
+                            announcementId: notice._id,
+                            title: notice.title,
+                            content: notice.content,
+                            type: notice.type,
+                            message: notice.content,
+                            isEdit: true,
+                            editTitle: notice.title,
+                            editContent: notice.content,
+                            editType: notice.type,
+                            nameFamily: notice.nameFamily,
+                            createBy: notice.createBy
+                          }
+                        });
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#3b82f6',
+                        fontSize: '20px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                      title="ערוך מודעה"
+                    >
+                      ✏️
+                    </button>
                     <button
                       onClick={() => handleOpenDeleteDialog(notice)}
                       style={{
@@ -1410,7 +1446,7 @@ const NoticeBoard = () => {
                 </div>
               </form>
             </div>
-          )}
+      
         </div>
       )}
   

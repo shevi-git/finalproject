@@ -210,8 +210,6 @@ const NavigationBar = () => {
                         ניהול בניין
                     </Typography>
                 </Box>
-
-                {/* תפריט ניווט */}
                 {isMobile ? (
                     <>
                         <IconButton

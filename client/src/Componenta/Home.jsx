@@ -47,8 +47,6 @@ const Home = () => {
   const [newFamily, setNewFamily] = useState({
     nameFamily: '',
     floor: '',
-    electricity: '',
-    water: '',
     amountChildren: '',
     role: 'שכן רגיל',
     password: ''
@@ -156,8 +154,6 @@ const Home = () => {
       setNewFamily({
         nameFamily: '',
         floor: '',
-        electricity: '',
-        water: '',
         amountChildren: '',
         role: 'שכן רגיל',
         password: ''
@@ -733,26 +729,18 @@ const Home = () => {
                             <Divider sx={{ opacity: 0.6 }} />
 
                             <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-around' }}>
-                              <Tooltip title="חשמל">
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                  <ElectricBoltIcon color="warning" />
-                                  <Typography variant="caption">{family.electricity || '0'}</Typography>
-                                </Box>
-                              </Tooltip>
-                              <Tooltip title="מים">
-                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                  <WaterDropIcon color="info" />
-                                  <Typography variant="caption">{family.water || '0'}</Typography>
-                                </Box>
-                              </Tooltip>
                               <Tooltip title="עדכן משפחה">
                                 <IconButton
                                   color="primary"
                                   onClick={() => {
                                     const userRole = localStorage.getItem('userRole');
-                                    const isOwner = family.userId === localStorage.getItem('userId');
+                                    const userId = localStorage.getItem('userId');
+                                    const userIdFromLocal = localStorage.getItem('userId');
+                                    const isOwner = family.userId && userIdFromLocal && family.userId.toString() === userIdFromLocal;
+
+                                    // בדיקה אם המשתמש הוא בעל המשפחה או ועד בית
                                     const isHouseCommittee = userRole === 'houseCommittee' || userRole === 'ועד בית';
-                                    
+                                  
                                     if (isOwner || isHouseCommittee) {
                                       handleOpenUpdateDialog(family);
                                     } else {
@@ -761,6 +749,7 @@ const Home = () => {
                                       setAlertOpen(true);
                                     }
                                   }}
+                                  
                                   sx={{
                                     '&:hover': {
                                       backgroundColor: 'primary.light',
@@ -1004,22 +993,6 @@ const Home = () => {
             label="קומה"
             name="floor"
             value={updateFields.floor || ""}
-            onChange={handleUpdateFieldChange}
-            fullWidth
-            sx={{ mt: 2 }}
-          />
-          <TextField
-            label="חשמל"
-            name="electricity"
-            value={updateFields.electricity || ""}
-            onChange={handleUpdateFieldChange}
-            fullWidth
-            sx={{ mt: 2 }}
-          />
-          <TextField
-            label="מים"
-            name="water"
-            value={updateFields.water || ""}
             onChange={handleUpdateFieldChange}
             fullWidth
             sx={{ mt: 2 }}

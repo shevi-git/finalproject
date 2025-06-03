@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
-import { Box, Typography, Button, Stack, Snackbar } from '@mui/material';
-import { Print as PrintIcon, Download as DownloadIcon, Share as ShareIcon } from '@mui/icons-material';
+import { Box, Typography, Button, Stack, Snackbar, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
+import { Print as PrintIcon, Download as DownloadIcon, Share as ShareIcon, Edit as EditIcon } from '@mui/icons-material';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -11,13 +11,22 @@ const Announcement = () => {
     const announcementRef = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
-    const { sex, nameFamily, wedding, message } = location.state || {};
+    const { sex, nameFamily, wedding, message, announcementId, isEdit, title: editTitle, content: editContent, type: editType } = location.state || {};
     
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [showActionButtons, setShowActionButtons] = useState(false);
     const [isMessageType, setIsMessageType] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editedContent, setEditedContent] = useState("");
+    const [editedTitle, setEditedTitle] = useState("");
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [updatePassword, setUpdatePassword] = useState("");
+    const [updateError, setUpdateError] = useState(null);
+    const [showUpdatePasswordDialog, setShowUpdatePasswordDialog] = useState(false);
+    const [verifiedPassword, setVerifiedPassword] = useState("");
+    const [isVerified, setIsVerified] = useState(false);
 
     // צבעי זהב
     const goldColors = {
@@ -37,27 +46,45 @@ const Announcement = () => {
     };
 
     useEffect(() => {
+        // אם זה מצב עריכה
+        if (isEdit) {
+            setIsMessageType(editType === "הודעות כלליות");
+            setTitle(editTitle || title);
+            setContent(editContent || content);
+            setEditedTitle(editTitle || title);
+            setEditedContent(editContent || content);
+            setShowActionButtons(true);
+            setEditDialogOpen(true);
+            return;
+        }
+
         // בדיקה האם זו מודעת הודעה או מודעת שמחה
         if (message !== null && message !== undefined) {
             setIsMessageType(true);
             setTitle("לשכנים היקרים");
             setContent(message);
+            setEditedTitle("לשכנים היקרים");
+            setEditedContent(message);
         } else {
             setIsMessageType(false);
             setTitle(`למשפחת ${nameFamily} היקרה!`);
+            setEditedTitle(`למשפחת ${nameFamily} היקרה!`);
             
             // יצירת תוכן מתאים לסוג השמחה
+            let newContent = '';
             if (wedding === "הולדת" && sex === "בן") {
-                setContent(`מזל טוב לרגל הולדת ה${sex}\nתזכו לגדלו לחופה לתורה ולמעשים טובים\nמאחלים השכנים`);
+                newContent = `מזל טוב לרגל הולדת ה${sex}\nתזכו לגדלו לחופה לתורה ולמעשים טובים\nמאחלים השכנים`;
             } else if (wedding === "הולדת" && sex === "בת") {
-                setContent(`מזל טוב לרגל הולדת ה${sex}\nתזכו לגדלה לחופה לתורה ולמעשים טובים\nמאחלים השכנים`);
+                newContent = `מזל טוב לרגל הולדת ה${sex}\nתזכו לגדלה לחופה לתורה ולמעשים טובים\nמאחלים השכנים`;
             } else if (wedding === "אירוסי") {
-                setContent(`מזל טוב לרגל אירוסי ה${sex}\nשהשמחה תמיד תשרה במעונכם\nמאחלים השכנים`);
+                newContent = `מזל טוב לרגל אירוסי ה${sex}\nשהשמחה תמיד תשרה במעונכם\nמאחלים השכנים`;
             } else { // בר/בת מצווה
-                setContent(`מזל טוב\nלרגל היכנס ${sex === "בן" ? "בנכם" : "בתכם"} לעול תורה ומצוות\nתזכו תמיד לרוב נחת יהודית אמיתית\nמאחלים השכנים`);
+                newContent = `מזל טוב\nלרגל היכנס ${sex === "בן" ? "בנכם" : "בתכם"} לעול תורה ומצוות\nתזכו תמיד לרוב נחת יהודית אמיתית\nמאחלים השכנים`;
             }
+            setContent(newContent);
+            setEditedContent(newContent);
         }
-    }, [message, sex, nameFamily, wedding]);
+    }, [message, sex, nameFamily, wedding, isEdit, editTitle, editContent, editType, title]);
 
     const getEventText = () => {
         if (wedding === "אירוסי") return "אירוסי";
@@ -86,7 +113,158 @@ const Announcement = () => {
         }
     };
 
+    const handleEdit = () => {
+        setShowUpdatePasswordDialog(true);
+    };
+
+    const handlePasswordConfirm = async () => {
+        try {
+            console.log("מנסה לאמת עם ID:", announcementId);
+            if (!announcementId) {
+                setUpdateError("שגיאה: מזהה המודעה חסר");
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            console.log("Token exists:", !!token); // בדיקה האם יש טוקן בכלל
+
+            if (!token) {
+                console.log("No token found in localStorage");
+                setUpdateError("נדרשת התחברות מחדש למערכת");
+                setTimeout(() => {
+                    navigate('/login');
+                }, 2000);
+                return;
+            }
+
+            let userId;
+            try {
+                console.log("Token before decode:", token.substring(0, 20) + "..."); // הצגת חלק מהטוקן
+                const decodedToken = JSON.parse(atob(token.split('.')[1]));
+                console.log("Decoded token:", decodedToken); // הצגת הטוקן המפוענח
+                userId = decodedToken.userId;
+                if (!userId) {
+                    throw new Error("מזהה משתמש חסר");
+                }
+                console.log("User ID from token:", userId);
+            } catch (error) {
+                console.error("שגיאה בפענוח הטוקן:", error);
+                console.error("Token that failed:", token);
+                setUpdateError("נדרשת התחברות מחדש למערכת");
+                localStorage.removeItem('token');
+                setTimeout(() => {
+                    navigate('/login');
+                }, 2000);
+                return;
+            }
+
+            const response = await axios.put(`http://localhost:8000/api/Announcement/verifyAnnouncementOwner/${announcementId}`, {
+                password: updatePassword
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 200) {
+                console.log("אימות בוצע בהצלחה");
+                setVerifiedPassword(updatePassword);
+                setIsVerified(true);
+                setShowUpdatePasswordDialog(false);
+                setUpdatePassword("");
+                setUpdateError(null);
+                setEditedTitle(title);
+                setEditedContent(content);
+                setEditDialogOpen(true);
+            }
+        } catch (error) {
+            console.error("שגיאה באימות:", error);
+            console.log("פרטי השגיאה:", {
+                status: error.response?.status,
+                data: error.response?.data,
+                announcementId,
+                url: error.config?.url
+            });
+            
+            if (error.response?.status === 404) {
+                setUpdateError("המודעה לא נמצאה במערכת");
+            } else if (error.response?.status === 403) {
+                setUpdateError("אין לך הרשאה לעדכן מודעה זו. רק היוצר המקורי יכול לערוך.");
+            } else if (error.response?.status === 401) {
+                setUpdateError("נדרשת התחברות מחדש למערכת");
+                localStorage.removeItem('token');
+                setTimeout(() => {
+                    navigate('/login');
+                }, 2000);
+            } else {
+                setUpdateError(error.response?.data?.message || "סיסמה שגויה");
+            }
+        }
+    };
+
+    const handleUpdate = async () => {
+        if (!isVerified) {
+            setSnackbarMessage("נדרש אימות לפני עדכון המודעה");
+            setSnackbarOpen(true);
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setSnackbarMessage("נדרשת התחברות מחדש למערכת");
+            setSnackbarOpen(true);
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+            return;
+        }
+
+        try {
+            const response = await axios.put(`http://localhost:8000/api/Announcement/updateAnnouncement/${announcementId}`, {
+                title: editedTitle,
+                content: editedContent,
+                type: isMessageType ? "הודעות כלליות" : "הודעות שמחה",
+                password: verifiedPassword
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 200) {
+                setTitle(editedTitle);
+                setContent(editedContent);
+                setEditDialogOpen(false);
+                setIsVerified(false);
+                setVerifiedPassword("");
+                setSnackbarMessage("המודעה עודכנה בהצלחה");
+                setSnackbarOpen(true);
+                
+                setTimeout(() => {
+                    navigate('/NoticeBoard');
+                }, 1500);
+            }
+        } catch (error) {
+            console.error("שגיאה בעדכון המודעה:", error);
+            if (error.response?.status === 403) {
+                setSnackbarMessage("אין לך הרשאה לעדכן מודעה זו");
+            } else if (error.response?.status === 401) {
+                setSnackbarMessage("נדרשת התחברות מחדש למערכת");
+                localStorage.removeItem('token');
+                setTimeout(() => {
+                    navigate('/login');
+                }, 2000);
+            } else {
+                setSnackbarMessage(error.response?.data?.message || "שגיאה בעדכון המודעה");
+            }
+            setSnackbarOpen(true);
+        }
+    };
+
     const saveAnnouncement = async () => {
+        const token = localStorage.getItem('token');
+        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        const userId = decodedToken.userId;
         let announcementData;
         
         if (isMessageType) {
@@ -95,7 +273,7 @@ const Announcement = () => {
                 title: "לשכנים היקרים",
                 content: message,
                 type:"הודעות כלליות",
-                createBy: "ועד הבית",
+                createBy: userId,
                 createDate: new Date().toISOString()
             };
         } else {
@@ -104,23 +282,34 @@ const Announcement = () => {
                 title: `למשפחת ${nameFamily} היקרה!`,
                 content: content,
                 type:"הודעות שמחה",
-                createBy: "ועד הבית",
+                createBy: userId,
                 createDate: new Date().toISOString()
             };
         }
        
         try {
             console.log("שולח נתונים לשרת:", JSON.stringify(announcementData, null, 2));
-            const response = await axios.post(`http://localhost:8000/Announcement/CreateAnnouncement`, announcementData);
+            const response = await axios.post(`http://localhost:8000/api/Announcement/createAnnouncement`, announcementData);
             console.log("תשובה מהשרת:", JSON.stringify(response.data, null, 2));
             
             if (response.status === 200 || response.status === 201) {
                 console.log(`השמירה בוצעה בהצלחה!`);
+                // שמירת ה-ID של המודעה
+                const newAnnouncementId = response.data.newAnnouncement._id;
                 setShowActionButtons(true);
+                // עדכון ה-URL עם ה-ID החדש
+                navigate(location.pathname, {
+                    state: {
+                        ...location.state,
+                        announcementId: newAnnouncementId,
+                        createBy: userId
+                    },
+                    replace: true
+                });
 
                 // קבלת כל המודעות אחרי השמירה
                 try {
-                    const allAnnouncements = await axios.get(`http://localhost:8000/Announcement/getAnnouncements`);
+                    const allAnnouncements = await axios.get(`http://localhost:8000/api/Announcement/getAnnouncements`);
                     console.log("כל המודעות במערכת:", JSON.stringify(allAnnouncements.data, null, 2));
                 } catch (error) {
                     console.error("שגיאה בקבלת המודעות:", error.response?.data || error.message);
@@ -561,6 +750,30 @@ const Announcement = () => {
                     <Stack direction="row" spacing={3} className="no-print">
                         <Button
                             variant="contained"
+                            startIcon={<EditIcon />}
+                            onClick={handleEdit}
+                            sx={isMessageType ? {
+                                backgroundColor: formalColors.text,
+                                '&:hover': {
+                                    backgroundColor: formalColors.lightText,
+                                },
+                                px: 3,
+                                py: 1.2,
+                                borderRadius: 1
+                            } : {
+                                backgroundColor: goldColors.text,
+                                '&:hover': {
+                                    backgroundColor: goldColors.border,
+                                },
+                                px: 3,
+                                py: 1.2,
+                                borderRadius: 2
+                            }}
+                        >
+                            עריכה
+                        </Button>
+                        <Button
+                            variant="contained"
                             startIcon={<PrintIcon />}
                             onClick={handlePrint}
                             sx={isMessageType ? {
@@ -644,6 +857,127 @@ const Announcement = () => {
                     message="שגיאה בביצוע הפעולה, אנא נסה שוב"
                 />
             </Box>
+
+            {/* דיאלוג סיסמה לעדכון */}
+            <Dialog 
+                open={showUpdatePasswordDialog} 
+                onClose={() => {
+                    setShowUpdatePasswordDialog(false);
+                    setUpdatePassword("");
+                    setUpdateError(null);
+                }}
+            >
+                <DialogTitle sx={{ textAlign: 'center' }}>אימות עדכון מודעה</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: 2,
+                        minWidth: 320,
+                        p: 2
+                    }}>
+                        <Typography>
+                            הכנס סיסמה לאימות הרשאות העדכון.
+                            רק היוצר המקורי של המודעה יכול לערוך אותה.
+                        </Typography>
+                        <TextField
+                            type="password"
+                            placeholder="הכנס סיסמה"
+                            value={updatePassword}
+                            onChange={(e) => setUpdatePassword(e.target.value)}
+                            fullWidth
+                            error={!!updateError}
+                            helperText={updateError}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter' && updatePassword) {
+                                    handlePasswordConfirm();
+                                }
+                            }}
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', p: 2 }}>
+                    <Button 
+                        onClick={() => {
+                            setShowUpdatePasswordDialog(false);
+                            setUpdatePassword("");
+                            setUpdateError(null);
+                        }}
+                        color="inherit"
+                    >
+                        ביטול
+                    </Button>
+                    <Button
+                        onClick={handlePasswordConfirm}
+                        variant="contained"
+                        color="primary"
+                        disabled={!updatePassword}
+                    >
+                        אישור
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* דיאלוג עריכה - נפתח רק אחרי אימות מוצלח */}
+            <Dialog 
+                open={editDialogOpen && isVerified} 
+                onClose={() => {
+                    setEditDialogOpen(false);
+                    setIsVerified(false);
+                    setVerifiedPassword("");
+                }}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle sx={{ textAlign: 'center' }}>עריכת מודעה</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <TextField
+                            label="כותרת"
+                            value={editedTitle}
+                            onChange={(e) => setEditedTitle(e.target.value)}
+                            fullWidth
+                            dir="rtl"
+                        />
+                        <TextField
+                            label="תוכן"
+                            value={editedContent}
+                            onChange={(e) => setEditedContent(e.target.value)}
+                            multiline
+                            rows={4}
+                            fullWidth
+                            dir="rtl"
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', p: 2 }}>
+                    <Button 
+                        onClick={() => {
+                            setEditDialogOpen(false);
+                            setIsVerified(false);
+                            setVerifiedPassword("");
+                        }} 
+                        color="inherit"
+                    >
+                        ביטול
+                    </Button>
+                    <Button 
+                        onClick={handleUpdate}
+                        variant="contained" 
+                        color="primary"
+                    >
+                        שמור שינויים
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Snackbar להודעות */}
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={() => setSnackbarOpen(false)}
+                message={snackbarMessage}
+            />
         </>
     );
 };

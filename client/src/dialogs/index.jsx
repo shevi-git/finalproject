@@ -125,18 +125,6 @@ export const FamilyDetailsDialog = ({ open, onClose, family }) => {
                             <Typography>מספר ילדים: {family.amountChildren}</Typography>
                         </Box>
                     </Grid>
-                    <Grid item xs={12}>
-                        <Box display="flex" alignItems="center" gap={1}>
-                            <Bolt />
-                            <Typography>חשמל: {family.electricity}</Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Box display="flex" alignItems="center" gap={1}>
-                            <WaterDrop />
-                            <Typography>מים: {family.water}</Typography>
-                        </Box>
-                    </Grid>
                 </Grid>
             </DialogContent>
             <DialogActions>
@@ -221,32 +209,7 @@ export const AddFamilyDialog = ({ open, onClose, onSubmit, formData, onChange, i
                                             transition: { duration: 0.5 }
                                         }}
                                     >
-                                        <Box
-                                            sx={{
-                                                width: 90,
-                                                height: 90,
-                                                bgcolor: 'primary.main',
-                                                borderRadius: '50%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                boxShadow: '0 10px 20px rgba(0, 0, 0, 0.15), inset 0 -2px 0 rgba(0, 0, 0, 0.1)',
-                                            }}
-                                        >
-                                            <motion.div
-                                                animate={{
-                                                    rotateY: [0, 360],
-                                                }}
-                                                transition={{
-                                                    duration: 3,
-                                                    repeat: Infinity,
-                                                    repeatType: "loop",
-                                                    ease: "easeInOut"
-                                                }}
-                                            >
-                                                <Apartment sx={{ fontSize: 50, color: 'white' }} />
-                                            </motion.div>
-                                        </Box>
+                                        
                                     </motion.div>
                                 </Box>
 
@@ -381,78 +344,8 @@ export const AddFamilyDialog = ({ open, onClose, onSubmit, formData, onChange, i
                                     </motion.div>
 
                                     <Grid container spacing={2}>
-                                        <Grid item xs={12} md={6}>
-                                            <motion.div variants={itemVariants}>
-                                                <TextField
-                                                    fullWidth
-                                                    label="חשמל"
-                                                    name="electricity"
-                                                    type="number"
-                                                    value={formData.electricity}
-                                                    onChange={onChange}
-                                                    required
-                                                    variant="outlined"
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <Bolt color="primary" />
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                    sx={{
-                                                        '& .MuiOutlinedInput-root': {
-                                                            borderRadius: 2,
-                                                            '&:hover fieldset': {
-                                                                borderColor: 'primary.main',
-                                                                borderWidth: '2px',
-                                                            },
-                                                            '&.Mui-focused fieldset': {
-                                                                borderColor: 'primary.main',
-                                                                borderWidth: 2,
-                                                                boxShadow: '0 0 0 3px rgba(33, 150, 243, 0.1)',
-                                                            },
-                                                        },
-                                                    }}
-                                                />
-                                            </motion.div>
+                                       
                                         </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <motion.div variants={itemVariants}>
-                                                <TextField
-                                                    fullWidth
-                                                    label="מים"
-                                                    name="water"
-                                                    type="number"
-                                                    value={formData.water}
-                                                    onChange={onChange}
-                                                    required
-                                                    variant="outlined"
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <WaterDrop color="primary" />
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                    sx={{
-                                                        '& .MuiOutlinedInput-root': {
-                                                            borderRadius: 2,
-                                                            '&:hover fieldset': {
-                                                                borderColor: 'primary.main',
-                                                                borderWidth: '2px',
-                                                            },
-                                                            '&.Mui-focused fieldset': {
-                                                                borderColor: 'primary.main',
-                                                                borderWidth: 2,
-                                                                boxShadow: '0 0 0 3px rgba(33, 150, 243, 0.1)',
-                                                            },
-                                                        },
-                                                    }}
-                                                />
-                                            </motion.div>
-                                        </Grid>
-                                    </Grid>
-
                                     <Grid container spacing={2}>
                                         <Grid item xs={12} md={6}>
                                             <motion.div variants={itemVariants}>
